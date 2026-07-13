@@ -551,6 +551,9 @@ export function ScheduleScreen({
 
       {/* Action row */}
       <div class="action-row action-row--wrap">
+        <button class="btn btn--secondary btn--small" onClick={onEditInputs}>
+          Edit inputs
+        </button>
         {!confirmStartOver ? (
           <button class="btn btn--destructive btn--small" onClick={handleStartOverClick}>
             Start over

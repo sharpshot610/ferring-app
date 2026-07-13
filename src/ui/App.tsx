@@ -48,9 +48,10 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [pregnancy, setPregnancy] = useState<Pregnancy | null>(null);
 
-  // Derive initial screen: if there's a saved anchor, start on schedule
-  const [screen, setScreen] = useState<Screen>(() => state.anchor ? 'schedule' : 'setup');
-  // Track whether we navigated to setup from the schedule (for Back button)
+  // Always start on the setup screen (clean wizard step 1).
+  // The returning user can tap "View my schedule →" in the resume banner.
+  const [screen, setScreen] = useState<Screen>('setup');
+  // Track whether we navigated to setup from the schedule (for Back button / edit mode)
   const [fromSchedule, setFromSchedule] = useState(false);
 
   // Apply theme on mount and on theme change
@@ -118,6 +119,11 @@ export function App() {
     setScreen('schedule');
   }
 
+  function handleViewSchedule() {
+    setFromSchedule(false);
+    setScreen('schedule');
+  }
+
   function handleStartOver() {
     updateState({ anchor: null });
     setFromSchedule(false);
@@ -170,10 +176,11 @@ export function App() {
           <SetupWizard
             anchor={state.anchor}
             settings={state.settings}
-            fromSchedule={fromSchedule}
+            mode={fromSchedule ? 'edit' : 'fresh'}
             onCalculate={handleCalculate}
             onSettingsChange={handleSettingsChange}
             onBack={fromSchedule ? handleBackToSchedule : undefined}
+            onViewSchedule={state.anchor ? handleViewSchedule : undefined}
           />
         )}
 

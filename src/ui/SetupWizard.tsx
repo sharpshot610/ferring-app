@@ -7,10 +7,13 @@ import { DatePickerField } from './DatePickerField';
 interface Props {
   anchor: Anchor | null;
   settings: Settings;
-  fromSchedule: boolean;
+  /** 'fresh' = page load, always start at step 1 clean; 'edit' = pre-fill from saved anchor */
+  mode: 'fresh' | 'edit';
   onCalculate: (anchor: Anchor) => void;
   onSettingsChange: (settings: Settings) => void;
   onBack?: () => void;
+  /** Called when the returning user taps "View my schedule →" in the resume banner */
+  onViewSchedule?: () => void;
 }
 
 type WizardStep = 1 | 2 | 3;
@@ -61,19 +64,21 @@ function getLabelForType(type: AnchorType): string {
 export function SetupWizard({
   anchor,
   settings,
-  fromSchedule,
+  mode,
   onCalculate,
   onSettingsChange,
   onBack,
+  onViewSchedule,
 }: Props) {
-  // If editing (fromSchedule), pre-select the saved anchor type and date.
-  // If first-time setup, start with no type selected and empty date.
-  const [step, setStep] = useState<WizardStep>(fromSchedule && anchor ? 2 : 1);
+  const isEdit = mode === 'edit';
+  // In edit mode: pre-select the saved anchor type and start at step 2.
+  // In fresh mode: always clean — step 1, no type, empty date.
+  const [step, setStep] = useState<WizardStep>(isEdit && anchor ? 2 : 1);
   const [anchorType, setAnchorType] = useState<AnchorType | null>(
-    fromSchedule && anchor ? anchor.type : null
+    isEdit && anchor ? anchor.type : null
   );
-  // Date: empty on fresh setup; pre-filled when editing.
-  const [dateValue, setDateValue] = useState(fromSchedule && anchor ? anchor.date : '');
+  // Date: pre-filled when editing; always empty on fresh load.
+  const [dateValue, setDateValue] = useState(isEdit && anchor ? anchor.date : '');
   const [gaWeeks, setGaWeeks] = useState(anchor?.ga?.weeks ?? 0);
   const [gaDays, setGaDays] = useState(anchor?.ga?.days ?? 0);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -139,36 +144,50 @@ export function SetupWizard({
   // ─── Step 1: Choose anchor type ───────────────────────────────────────────
   if (step === 1) {
     return (
-      <div class="wizard-card card">
-        {/* Back to schedule affordance when editing */}
-        {onBack && (
-          <button class="btn btn--ghost wizard-back-top" onClick={onBack}>
-            ← Back to schedule
-          </button>
+      <>
+        {/* Resume banner: shown in fresh mode when a saved schedule exists */}
+        {!isEdit && anchor && onViewSchedule && (
+          <div class="resume-banner card">
+            <p class="resume-banner__text">
+              Welcome back — you have a saved schedule.
+            </p>
+            <button class="btn btn--primary resume-banner__btn" onClick={onViewSchedule}>
+              View my schedule →
+            </button>
+          </div>
         )}
 
-        <div class="wizard-intro">
-          <p class="wizard-intro__text">
-            Welcome. Tell us one date you know, and we'll map your entire
-            schedule — every appointment, test and milestone.
-          </p>
-        </div>
-
-        <h2 class="wizard__step-heading">What do you know?</h2>
-
-        <div class="anchor-grid" role="group" aria-label="Choose a date type">
-          {ANCHOR_OPTIONS.map(opt => (
-            <button
-              key={opt.type}
-              class="anchor-card"
-              onClick={() => handleSelectType(opt.type)}
-            >
-              <span class="anchor-card__label">{opt.label}</span>
-              <span class="anchor-card__caption">{opt.caption}</span>
+        <div class="wizard-card card">
+          {/* Back to schedule affordance when editing */}
+          {onBack && (
+            <button class="btn btn--ghost wizard-back-top" onClick={onBack}>
+              ← Back to schedule
             </button>
-          ))}
+          )}
+
+          <div class="wizard-intro">
+            <p class="wizard-intro__text">
+              Welcome. Tell us one date you know, and we'll map your entire
+              schedule — every appointment, test and milestone.
+            </p>
+          </div>
+
+          <h2 class="wizard__step-heading">What do you know?</h2>
+
+          <div class="anchor-grid" role="group" aria-label="Choose a date type">
+            {ANCHOR_OPTIONS.map(opt => (
+              <button
+                key={opt.type}
+                class="anchor-card"
+                onClick={() => handleSelectType(opt.type)}
+              >
+                <span class="anchor-card__label">{opt.label}</span>
+                <span class="anchor-card__caption">{opt.caption}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
