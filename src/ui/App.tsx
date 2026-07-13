@@ -35,7 +35,7 @@ function nextTheme(current: Theme): Theme {
 }
 
 function screenTitle(screen: Screen): string {
-  if (screen === 'setup') return 'Calculator';
+  if (screen === 'setup') return '';
   if (screen === 'schedule') return 'Schedule';
   return 'Export';
 }
