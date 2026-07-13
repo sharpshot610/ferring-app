@@ -1006,6 +1006,68 @@ body {
   font-style: italic;
 }
 
+/* ─── Date picker wrapper (Bug 1 — Safari ghost-date fix) ───────────────── */
+/* A positioned container: visible affordance behind, native input on top at  */
+/* opacity:0 so tapping opens the OS date picker.                             */
+.date-picker-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+}
+
+.date-picker-wrapper--error {
+  border-color: var(--color-error-text);
+}
+
+/* Focus ring when the invisible native input is focused */
+.date-picker-wrapper:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.date-picker-wrapper__placeholder {
+  font-size: 0.95rem;
+  color: var(--color-accent);
+  font-weight: 500;
+  user-select: none;
+}
+
+.date-picker-wrapper__chosen {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  user-select: none;
+}
+
+.date-picker-wrapper__change-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* The real native input: invisible, full-size overlay so any tap opens picker */
+.date-picker-wrapper__native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  /* Keep it reachable for keyboard / AT */
+  z-index: 1;
+  /* Prevent own appearance from leaking through at opacity:0 on some engines */
+  color: transparent;
+}
+
 /* ─── Wizard confirm summary ─────────────────────────────────────────────── */
 .wizard-summary {
   display: flex;
@@ -1080,14 +1142,38 @@ body {
     page-break-inside: avoid;
   }
 
-  /* Kill the screen layout's viewport-height flex stretch: with min-height
-     100dvh and .app-main { flex: 1 }, Safari reserves a full viewport of empty
-     space above the print section, pushing the schedule across the page break.
-     Block layout with no min-height starts the schedule at the top of page 1. */
+  /* Kill all viewport-height stretching that causes a blank second page in
+     Safari. body { min-height:100dvh } + html { height:100% } + flex:1 on
+     .app-main collectively reserve ≥ one page of whitespace below the content.
+     Force the entire container stack to shrink-wrap. */
+  body:has(.print-schedule) html,
+  html:has(.print-schedule),
+  body:has(.print-schedule) {
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:has(.print-schedule) #app {
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
   body:has(.print-schedule) .app,
   body:has(.print-schedule) .app-main {
     display: block !important;
     min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  @page {
+    margin: 14mm;
   }
 
   .print-schedule__title {
