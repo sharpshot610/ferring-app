@@ -91,6 +91,19 @@ export function ExportScreen({ pregnancy, milestones, today, onBack }: Props) {
     setCopyState('fallback');
   }
 
+  // Feature 5: Share button — only shown when navigator.share is available
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  function handleShare() {
+    if (!canShare) return;
+    const text = scheduleSummaryText(pregnancy, milestones, today);
+    navigator.share({ title: 'IVF Wheel schedule', text }).catch((err: unknown) => {
+      // Silently ignore AbortError (user cancelled); surface other errors
+      if (err instanceof Error && err.name === 'AbortError') return;
+      // Other errors: nothing actionable to show in this path
+    });
+  }
+
   const selectedCount = checked.size;
 
   return (
@@ -154,6 +167,11 @@ export function ExportScreen({ pregnancy, milestones, today, onBack }: Props) {
           <button class="btn btn--secondary" onClick={handleCopySummary}>
             {copyState === 'copied' ? 'Copied ✓' : 'Copy summary'}
           </button>
+          {canShare && (
+            <button class="btn btn--secondary" onClick={handleShare}>
+              Share…
+            </button>
+          )}
         </div>
 
         {copyState === 'fallback' && (

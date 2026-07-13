@@ -252,6 +252,155 @@ body {
   font-weight: 500;
 }
 
+/* ─── Week guide (comparison chip + note) ─────────────────────────────────── */
+.today-header__week-guide {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.today-header__comparison-chip {
+  display: inline-block;
+  background: var(--color-highlight);
+  color: #1c1c1e;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.today-header__week-note {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+/* ─── GA progress bar ─────────────────────────────────────────────────────── */
+.ga-progress {
+  margin-top: var(--space-md);
+}
+
+.ga-progress__track {
+  width: 100%;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ga-progress__fill {
+  height: 100%;
+  background: var(--color-highlight);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.ga-progress__caption {
+  margin-top: var(--space-xs);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* ─── Phase chip (ScheduleScreen) ─────────────────────────────────────────── */
+.phase-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.phase-banner__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--color-highlight);
+  color: #1c1c1e;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 99px;
+  align-self: flex-start;
+}
+
+.phase-banner__next {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+/* ─── hCG doubling calculator ─────────────────────────────────────────────── */
+.hcg-calc__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--space-sm);
+  align-items: flex-end;
+  margin-bottom: var(--space-md);
+}
+
+.hcg-calc__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-xs);
+}
+
+.hcg-calc__result {
+  margin-top: var(--space-sm);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.hcg-calc__result--reassuring {
+  color: #2d7a3e;
+}
+
+[data-theme="dark"] .hcg-calc__result--reassuring {
+  color: #7ec88e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .hcg-calc__result--reassuring {
+    color: #7ec88e;
+  }
+}
+
+.hcg-calc__result--borderline {
+  color: #b06020;
+}
+
+[data-theme="dark"] .hcg-calc__result--borderline {
+  color: #d4924a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .hcg-calc__result--borderline {
+    color: #d4924a;
+  }
+}
+
+.hcg-calc__result--slow {
+  color: var(--color-error-text);
+}
+
+.hcg-calc__footnote {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: var(--space-sm);
+  line-height: 1.5;
+}
+
+.hcg-calc__error {
+  font-size: 0.85rem;
+  color: var(--color-error-text);
+  margin-top: var(--space-xs);
+}
+
 /* ─── Timeline ───────────────────────────────────────────────────────────── */
 .timeline__title {
   font-size: 1rem;
@@ -1125,6 +1274,12 @@ body {
   body:has(.print-schedule) .wizard-card,
   body:has(.print-schedule) .export-section,
   body:has(.print-schedule) .screen-content,
+  body:has(.print-schedule) .ga-progress,
+  body:has(.print-schedule) .phase-banner,
+  body:has(.print-schedule) .hcg-calc__row,
+  body:has(.print-schedule) .hcg-calc__result,
+  body:has(.print-schedule) .hcg-calc__footnote,
+  body:has(.print-schedule) .hcg-calc__error,
   body:has(.print-schedule) select,
   body:has(.print-schedule) input {
     display: none !important;
