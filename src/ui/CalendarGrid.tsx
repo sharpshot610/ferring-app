@@ -19,6 +19,8 @@ export interface CalendarGridProps {
   today: ISODate;
   selected?: ISODate;
   markers?: Map<ISODate, string[]>;
+  /** Per-day tooltip text for day cells (milestone labels joined). Shown on hover/focus. */
+  tooltips?: Map<ISODate, string>;
   onSelectDay?: (date: ISODate) => void;
   cellSize?: CellSize;
 }
@@ -31,6 +33,7 @@ export function CalendarGrid({
   today,
   selected,
   markers,
+  tooltips,
   onSelectDay,
   cellSize = 'compact',
 }: CalendarGridProps) {
@@ -83,6 +86,7 @@ export function CalendarGrid({
               const isSelected = cell.date === selected;
               const cellMarkers = markers?.get(cell.date);
               const hasMarker = !!cellMarkers && cellMarkers.length > 0;
+              const tipText = tooltips?.get(cell.date);
 
               // Build aria-label: "12 March 2026" + qualifier
               const [y, m, d] = cell.date.split('-').map(Number);
@@ -100,25 +104,33 @@ export function CalendarGrid({
               if (isToday) btnClass += ' cal-grid__day--today';
               if (isSelected) btnClass += ' cal-grid__day--selected';
 
+              const btn = (
+                <button
+                  type="button"
+                  class={btnClass}
+                  data-date={cell.date}
+                  aria-label={ariaLabel}
+                  aria-pressed={isSelected ? 'true' : undefined}
+                  onClick={() => handleDayClick(cell.date)}
+                  onKeyDown={(e) => handleDayKeyDown(e, cell.date)}
+                >
+                  <span class="cal-grid__day-num">{d}</span>
+                  {hasMarker && !isCompact && (
+                    <span class="cal-grid__dot" aria-hidden="true" />
+                  )}
+                  {hasMarker && isCompact && (
+                    <span class="cal-grid__dot-sm" aria-hidden="true" />
+                  )}
+                </button>
+              );
+
               return (
                 <td key={cell.date} role="gridcell" class="cal-grid__cell">
-                  <button
-                    type="button"
-                    class={btnClass}
-                    data-date={cell.date}
-                    aria-label={ariaLabel}
-                    aria-pressed={isSelected ? 'true' : undefined}
-                    onClick={() => handleDayClick(cell.date)}
-                    onKeyDown={(e) => handleDayKeyDown(e, cell.date)}
-                  >
-                    <span class="cal-grid__day-num">{d}</span>
-                    {hasMarker && !isCompact && (
-                      <span class="cal-grid__dot" aria-hidden="true" />
-                    )}
-                    {hasMarker && isCompact && (
-                      <span class="cal-grid__dot-sm" aria-hidden="true" />
-                    )}
-                  </button>
+                  {tipText && cell.inMonth ? (
+                    <span class="tip cal-grid__tip" data-tip={tipText} tabIndex={-1}>
+                      {btn}
+                    </span>
+                  ) : btn}
                 </td>
               );
             })}

@@ -1,12 +1,16 @@
 import { useState } from 'preact/hooks';
 import type { Pregnancy } from '../core/calc';
+import { gestationalAgeOn } from '../core/calc';
 import type { Milestone } from '../core/milestones';
 import { nextMilestone } from '../core/milestones';
 import { hcgDoublingTime } from '../core/hcg';
 import type { HcgReading } from '../core/hcg';
+import { monthGridFor, monthOf, addMonths } from '../core/monthGrid';
+import type { ISODate } from '../core/dates';
 import { TodayHeader } from './TodayHeader';
 import { Timeline } from './Timeline';
 import { ReverseQuery } from './ReverseQuery';
+import { CalendarGrid } from './CalendarGrid';
 import { formatMilestoneDate } from '../core/summary';
 import { DatePickerField } from './DatePickerField';
 
@@ -41,7 +45,6 @@ interface Props {
   today: string;
   onEditInputs: () => void;
   onStartOver: () => void;
-  onCalendar: () => void;
   onExport: () => void;
 }
 
@@ -104,18 +107,106 @@ function friendlyAssessment(assessment: 'reassuring' | 'borderline' | 'slow', ho
   return `Doubling every ${h} h — slower than typical; contact your clinic`;
 }
 
+// ─── Inline calendar helpers ──────────────────────────────────────────────────
+
+function calInitialYM(milestones: Milestone[], today: string) {
+  const next = nextMilestone(milestones);
+  if (next) return monthOf(next.date as ISODate);
+  return monthOf(today as ISODate);
+}
+
+function calClamp(
+  ym: { year: number; month: number },
+  minYM: { year: number; month: number },
+  maxYM: { year: number; month: number },
+) {
+  const val = ym.year * 12 + ym.month;
+  const lo = minYM.year * 12 + minYM.month;
+  const hi = maxYM.year * 12 + maxYM.month;
+  if (val < lo) return minYM;
+  if (val > hi) return maxYM;
+  return ym;
+}
+
+function formatGA(pregnancy: Pregnancy, date: ISODate): string {
+  const ga = gestationalAgeOn(pregnancy, date);
+  if (ga.totalDays < 0) return 'before your cycle start';
+  return `${ga.weeks}w ${ga.days}d`;
+}
+
 export function ScheduleScreen({
   pregnancy,
   milestones,
   today,
   onEditInputs,
   onStartOver,
-  onCalendar,
   onExport,
 }: Props) {
   const [reverseOpen, setReverseOpen] = useState(false);
   const [hcgOpen, setHcgOpen] = useState(false);
   const [confirmStartOver, setConfirmStartOver] = useState(false);
+
+  // ─── Inline calendar state ────────────────────────────────────────────────
+  const sortedDates = [...milestones].sort((a, b) => a.date.localeCompare(b.date));
+  const firstDate = sortedDates[0]?.date;
+  const lastDate = sortedDates[sortedDates.length - 1]?.date;
+  const minYM = firstDate ? monthOf(firstDate as ISODate) : monthOf(today as ISODate);
+  const maxYM = lastDate ? monthOf(lastDate as ISODate) : monthOf(today as ISODate);
+  const startYM = calClamp(calInitialYM(milestones, today), minYM, maxYM);
+
+  const [calYear, setCalYear] = useState(startYM.year);
+  const [calMonth, setCalMonth] = useState(startYM.month);
+  const [selectedDay, setSelectedDay] = useState<ISODate | null>(null);
+
+  const calAtMin = calYear * 12 + calMonth <= minYM.year * 12 + minYM.month;
+  const calAtMax = calYear * 12 + calMonth >= maxYM.year * 12 + maxYM.month;
+
+  function calPrev() {
+    if (calAtMin) return;
+    const { year, month } = addMonths(calYear, calMonth, -1);
+    setCalYear(year);
+    setCalMonth(month);
+  }
+  function calNext() {
+    if (calAtMax) return;
+    const { year, month } = addMonths(calYear, calMonth, 1);
+    setCalYear(year);
+    setCalMonth(month);
+  }
+
+  // Build markers + tooltips maps
+  const calMarkers = new Map<ISODate, string[]>();
+  const calTooltips = new Map<ISODate, string>();
+  for (const m of milestones) {
+    const d = m.date as ISODate;
+    const existing = calMarkers.get(d) ?? [];
+    existing.push(m.label);
+    calMarkers.set(d, existing);
+  }
+  for (const [d, labels] of calMarkers) {
+    calTooltips.set(d, labels.join(' · '));
+  }
+
+  const calGrid = monthGridFor(calYear, calMonth);
+
+  // Milestones visible in the current month's grid
+  const calGridDates = new Set(calGrid.weeks.flatMap(w => w.map(c => c.date)));
+  const calVisibleMilestones = milestones.filter(m => calGridDates.has(m.date));
+
+  function handleCalDaySelect(date: ISODate) {
+    setSelectedDay(prev => prev === date ? null : date);
+  }
+
+  // Detail line for selected day
+  let selectedDetail: { dateStr: string; ga: string; labels: string[] } | null = null;
+  if (selectedDay) {
+    const labels = calMarkers.get(selectedDay) ?? [];
+    selectedDetail = {
+      dateStr: formatMilestoneDate(selectedDay),
+      ga: formatGA(pregnancy, selectedDay),
+      labels,
+    };
+  }
 
   // hCG calculator state
   const [hcg, setHcg] = useState<HcgState>(INITIAL_HCG);
@@ -180,7 +271,77 @@ export function ScheduleScreen({
 
       <TodayHeader pregnancy={pregnancy} today={today} />
 
-      <Timeline milestones={milestones} />
+      {/* Two-column layout: milestones left, calendar right on ≥768px */}
+      <div class="schedule-columns">
+        <div class="schedule-columns__milestones">
+          <Timeline milestones={milestones} />
+        </div>
+
+        {/* Inline calendar card */}
+        <div class="schedule-columns__calendar card cal-inline" aria-label="Calendar view">
+          <div class="cal-screen__header">
+            <button
+              type="button"
+              class="dp-nav-btn"
+              onClick={calPrev}
+              disabled={calAtMin}
+              aria-label="Previous month"
+              aria-disabled={calAtMin}
+            >
+              ‹
+            </button>
+            <span class="cal-screen__month-label">{calGrid.label}</span>
+            <button
+              type="button"
+              class="dp-nav-btn"
+              onClick={calNext}
+              disabled={calAtMax}
+              aria-label="Next month"
+              aria-disabled={calAtMax}
+            >
+              ›
+            </button>
+          </div>
+
+          <CalendarGrid
+            grid={calGrid}
+            today={today as ISODate}
+            selected={selectedDay ?? undefined}
+            markers={calMarkers}
+            tooltips={calTooltips}
+            onSelectDay={handleCalDaySelect}
+            cellSize="full"
+          />
+
+          {/* Selected day detail */}
+          {selectedDetail && (
+            <div class="cal-inline__detail" role="status" aria-live="polite">
+              <span class="cal-inline__detail-date">{selectedDetail.dateStr}</span>
+              <span class="cal-inline__detail-ga">{selectedDetail.ga}</span>
+              {selectedDetail.labels.length > 0 && (
+                <span class="cal-inline__detail-labels">{selectedDetail.labels.join(' · ')}</span>
+              )}
+            </div>
+          )}
+
+          {/* Legend for visible milestones */}
+          {calVisibleMilestones.length > 0 && (
+            <ul class="cal-legend" aria-label="Milestones this month">
+              {calVisibleMilestones.map(m => (
+                <li key={m.id} class={`cal-legend__item cal-legend__item--${m.status}`}>
+                  <span class="cal-legend__dot" aria-hidden="true">●</span>
+                  <span class="cal-legend__text">
+                    {formatMilestoneDate(m.date)} — {m.label}
+                    {m.implied && (
+                      <span class="tip" data-tip="Estimated from the date you entered, not one you confirmed" tabIndex={0}> (implied)</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
 
       {/* Derived dates grid */}
       <div class="card derived-dates">
@@ -360,9 +521,6 @@ export function ScheduleScreen({
           </div>
         )}
         <div class="action-row__right">
-          <button class="btn btn--secondary" onClick={onCalendar}>
-            Calendar view
-          </button>
           <button class="btn btn--primary" onClick={onExport}>
             Export schedule →
           </button>

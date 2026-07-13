@@ -1655,6 +1655,102 @@ body {
   font-weight: 600;
 }
 
+/* ─── Schedule screen two-column layout ──────────────────────────────────── */
+/* Single column on mobile; milestones left / calendar right on ≥768px.      */
+
+.schedule-columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.schedule-columns__milestones {
+  /* Takes up what it needs, fills remaining space on wide layout */
+  min-width: 0;
+}
+
+.schedule-columns__calendar {
+  /* Inline calendar card — always visible, no button press */
+  min-width: 0;
+  align-self: flex-start;
+}
+
+@media (min-width: 768px) {
+  /* Override app max-width for the two-column layout so the grid has room */
+  .app {
+    max-width: 960px;
+  }
+
+  .schedule-columns {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .schedule-columns__milestones {
+    flex: 1 1 0;
+  }
+
+  .schedule-columns__calendar {
+    flex: 0 0 320px;
+    position: sticky;
+    top: var(--space-md);
+  }
+}
+
+/* ─── Inline calendar card ───────────────────────────────────────────────── */
+
+.cal-inline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ─── Inline calendar day-click detail line ──────────────────────────────── */
+
+.cal-inline__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-accent);
+}
+
+.cal-inline__detail-date {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.cal-inline__detail-ga {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.cal-inline__detail-labels {
+  font-size: 0.82rem;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* ─── Calendar grid tooltip wrapper ─────────────────────────────────────── */
+/* The .tip wrapper on day cells needs to display as block so it doesn't     */
+/* break the table cell layout.                                               */
+
+.cal-grid__tip {
+  display: block;
+  text-decoration: none;
+  cursor: default;
+}
+
+.cal-grid__tip::after {
+  /* Align tooltip above cell center; override the default left:50% */
+  left: 50%;
+  white-space: normal;
+  max-width: min(200px, calc(100vw - 24px));
+}
+
 /* ─── Action row modifier for schedule screen ────────────────────────────── */
 .action-row--wrap {
   flex-wrap: wrap;
@@ -1696,6 +1792,8 @@ body {
   body:has(.print-schedule) .ga-progress,
   body:has(.print-schedule) .phase-banner,
   body:has(.print-schedule) .cal-screen,
+  body:has(.print-schedule) .cal-inline,
+  body:has(.print-schedule) .schedule-columns__calendar,
   body:has(.print-schedule) .hcg-calc__row,
   body:has(.print-schedule) .hcg-calc__result,
   body:has(.print-schedule) .hcg-calc__footnote,
