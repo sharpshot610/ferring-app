@@ -6,9 +6,13 @@ import type { Settings } from '../core/calc';
 import { computePregnancy } from '../core/calc';
 import { getMilestones } from '../core/milestones';
 import { todayLocalISO } from '../core/dates';
-import { TodayHeader } from './TodayHeader';
-import { Timeline } from './Timeline';
+import { NavBar } from './NavBar';
 import { CalculatorCard } from './CalculatorCard';
+import { ScheduleScreen } from './ScheduleScreen';
+import { ExportScreen } from './ExportScreen';
+import { formatMilestoneDate } from '../core/summary';
+
+type Screen = 'setup' | 'schedule' | 'export';
 
 function msUntilMidnight(): number {
   const now = new Date();
@@ -30,10 +34,10 @@ function nextTheme(current: Theme): Theme {
   return 'system';
 }
 
-function themeLabel(t: Theme): string {
-  if (t === 'system') return 'System';
-  if (t === 'light') return 'Light';
-  return 'Dark';
+function screenTitle(screen: Screen): string {
+  if (screen === 'setup') return 'Calculator';
+  if (screen === 'schedule') return 'Schedule';
+  return 'Export';
 }
 
 export function App() {
@@ -41,9 +45,13 @@ export function App() {
   const [today, setToday] = useState<string>(() => {
     try { return todayLocalISO(); } catch { return new Date().toISOString().slice(0, 10); }
   });
-  const [calcCollapsed, setCalcCollapsed] = useState(!!state.anchor);
   const [error, setError] = useState<string | null>(null);
   const [pregnancy, setPregnancy] = useState<Pregnancy | null>(null);
+
+  // Derive initial screen: if there's a saved anchor, start on schedule
+  const [screen, setScreen] = useState<Screen>(() => state.anchor ? 'schedule' : 'setup');
+  // Track whether we navigated to setup from the schedule (for Back button)
+  const [fromSchedule, setFromSchedule] = useState(false);
 
   // Apply theme on mount and on theme change
   useEffect(() => {
@@ -80,23 +88,59 @@ export function App() {
   if (pregnancy) {
     try {
       milestones = getMilestones(pregnancy, today);
-    } catch (e) {
-      // milestones optional; error already surfaced via pregnancy computation
+    } catch {
+      // milestones optional; error surfaced via pregnancy computation
     }
-  }
-
-  function handleAnchorChange(anchor: Anchor) {
-    updateState({ anchor });
-  }
-
-  function handleSettingsChange(settings: Settings) {
-    updateState({ settings });
   }
 
   function handleThemeToggle() {
     const next = nextTheme(state.theme);
     updateState({ theme: next });
   }
+
+  function handleCalculate(anchor: Anchor) {
+    updateState({ anchor });
+    setFromSchedule(false);
+    setScreen('schedule');
+  }
+
+  function handleSettingsChange(settings: Settings) {
+    updateState({ settings });
+  }
+
+  function handleEditInputs() {
+    setFromSchedule(true);
+    setScreen('setup');
+  }
+
+  function handleBackToSchedule() {
+    setFromSchedule(false);
+    setScreen('schedule');
+  }
+
+  function handleStartOver() {
+    updateState({ anchor: null });
+    setFromSchedule(false);
+    setScreen('setup');
+  }
+
+  function handleGoToExport() {
+    setScreen('export');
+  }
+
+  function handleBackFromExport() {
+    setScreen('schedule');
+  }
+
+  // NavBar back/title config per screen
+  const navBackLabel =
+    screen === 'setup' && fromSchedule ? 'Back' :
+    screen === 'export' ? 'Back' :
+    undefined;
+  const navOnBack =
+    screen === 'setup' && fromSchedule ? handleBackToSchedule :
+    screen === 'export' ? handleBackFromExport :
+    undefined;
 
   return (
     <div class="app">
@@ -105,60 +149,84 @@ export function App() {
           <h1 class="app-header__title">IVF Wheel</h1>
           <span class="app-header__subtitle">Gestational calculator</span>
         </div>
-        <button
-          class="btn btn--ghost btn--small theme-toggle"
-          onClick={handleThemeToggle}
-          aria-label={`Switch theme (current: ${themeLabel(state.theme)})`}
-          title={`Theme: ${themeLabel(state.theme)}`}
-        >
-          {state.theme === 'dark' ? '☀️' : state.theme === 'light' ? '🌙' : '⚙️'} {themeLabel(state.theme)}
-        </button>
       </header>
 
+      <NavBar
+        title={screenTitle(screen)}
+        backLabel={navBackLabel}
+        onBack={navOnBack}
+        theme={state.theme}
+        onThemeToggle={handleThemeToggle}
+      />
+
       <main class="app-main">
-        {/* Error card — shown while core is stubbed or on any computation error */}
         {error && (
           <div class="error-card card" role="alert">
             <strong>Could not compute dates</strong>
             <p>{error}</p>
-            <p class="error-card__hint">Date calculations are being set up — results will appear once complete.</p>
           </div>
         )}
 
-        {/* No anchor yet → show calculator prominently */}
-        {!state.anchor && (
+        {screen === 'setup' && (
           <CalculatorCard
             anchor={state.anchor}
             settings={state.settings}
-            pregnancy={pregnancy}
-            onAnchorChange={handleAnchorChange}
+            fromSchedule={fromSchedule}
+            onCalculate={handleCalculate}
             onSettingsChange={handleSettingsChange}
+            onBack={fromSchedule ? handleBackToSchedule : undefined}
           />
         )}
 
-        {/* Anchor present → show today header, timeline, and collapsed calculator */}
-        {state.anchor && (
-          <>
-            {pregnancy && !error && (
-              <TodayHeader pregnancy={pregnancy} today={today} />
-            )}
+        {screen === 'schedule' && pregnancy && milestones && !error && (
+          <ScheduleScreen
+            pregnancy={pregnancy}
+            milestones={milestones}
+            today={today}
+            onEditInputs={handleEditInputs}
+            onStartOver={handleStartOver}
+            onExport={handleGoToExport}
+          />
+        )}
 
-            {pregnancy && milestones && !error && (
-              <Timeline milestones={milestones} />
-            )}
-
-            <CalculatorCard
-              anchor={state.anchor}
-              settings={state.settings}
-              pregnancy={pregnancy}
-              onAnchorChange={handleAnchorChange}
-              onSettingsChange={handleSettingsChange}
-              collapsed={calcCollapsed}
-              onToggleCollapse={() => setCalcCollapsed(c => !c)}
-            />
-          </>
+        {screen === 'export' && pregnancy && milestones && !error && (
+          <ExportScreen
+            pregnancy={pregnancy}
+            milestones={milestones}
+            today={today}
+            onBack={handleBackFromExport}
+          />
         )}
       </main>
+
+      {/* Print-only section — hidden on screen via CSS, visible @media print.
+          Rendered at App level so Cmd+P/Ctrl+P works from any screen that has
+          a computed pregnancy. The blanket "hide everything" print rules are
+          scoped to body:has(.print-schedule) so printing the setup screen
+          (no pregnancy) still renders the page normally. */}
+      {pregnancy && milestones && (
+        <section class="print-schedule" aria-hidden="true">
+          <h1 class="print-schedule__title">IVF Wheel — Schedule</h1>
+          <p class="print-schedule__meta">Generated {today}</p>
+          <table class="print-schedule__table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Milestone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {milestones.map(m => (
+                <tr key={m.id}>
+                  <td>{formatMilestoneDate(m.date)}</td>
+                  <td>{m.label}{m.implied ? ' (estimated)' : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="print-schedule__disclaimer">Not medical advice — confirm all dates with your clinic.</p>
+        </section>
+      )}
 
       <footer class="app-footer">
         <p class="disclaimer">

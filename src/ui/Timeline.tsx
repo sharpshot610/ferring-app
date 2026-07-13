@@ -1,18 +1,13 @@
 import type { Milestone } from '../core/milestones';
 import { nextMilestone } from '../core/milestones';
+import { formatMilestoneDate } from '../core/summary';
 
 interface Props {
   milestones: Milestone[];
 }
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(iso + 'T00:00:00'));
-}
+// Use the shared pure formatter (single source of truth, matches copy-summary text).
+const formatDate = formatMilestoneDate;
 
 function relativeNote(m: Milestone): string {
   if (m.status === 'today') return 'today';

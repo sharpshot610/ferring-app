@@ -2,19 +2,14 @@ import { useState } from 'preact/hooks';
 import type { Pregnancy } from '../core/calc';
 import { dateRangeForGestationalWeek, gestationalAgeOn } from '../core/calc';
 import { isValidISODate } from '../core/dates';
+import { formatMilestoneDate } from '../core/summary';
 
 interface Props {
   pregnancy: Pregnancy;
 }
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(iso + 'T00:00:00'));
-}
+// Use the shared pure formatter (single source of truth, matches copy-summary text).
+const formatDate = formatMilestoneDate;
 
 export function ReverseQuery({ pregnancy }: Props) {
   const [weekInput, setWeekInput] = useState('');
