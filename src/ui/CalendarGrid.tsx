@@ -6,9 +6,10 @@ import type { ISODate } from '../core/dates';
 // Shared component for the custom date picker popup AND the full calendar screen.
 // Props:
 //   grid       — from monthGridFor(year, month)
-//   today      — ISO date for "today" highlight (chartreuse outline)
+//   today      — ISO date for "today" highlight (muted outline, underline dot)
 //   selected   — ISO date for the selected cell (burgundy fill)
-//   markers    — Map<ISODate, string[]> milestone labels per date (chartreuse dots)
+//   linkedDate — ISO date linked from milestone hover/click (thick chartreuse ring)
+//   markers    — Map<ISODate, string[]> milestone labels per date (chartreuse ring + dot)
 //   onSelectDay — called when a day cell button is clicked
 //   cellSize   — 'compact' (picker popup) | 'full' (calendar screen)
 
@@ -18,6 +19,8 @@ export interface CalendarGridProps {
   grid: MonthGrid;
   today: ISODate;
   selected?: ISODate;
+  /** Date linked from milestone hover/click — shows a thick chartreuse ring */
+  linkedDate?: ISODate | null;
   markers?: Map<ISODate, string[]>;
   /** Per-day tooltip text for day cells (milestone labels joined). Shown on hover/focus. */
   tooltips?: Map<ISODate, string>;
@@ -32,6 +35,7 @@ export function CalendarGrid({
   grid,
   today,
   selected,
+  linkedDate,
   markers,
   tooltips,
   onSelectDay,
@@ -84,6 +88,7 @@ export function CalendarGrid({
             {week.map((cell) => {
               const isToday = cell.date === today;
               const isSelected = cell.date === selected;
+              const isLinked = !!linkedDate && cell.date === linkedDate;
               const cellMarkers = markers?.get(cell.date);
               const hasMarker = !!cellMarkers && cellMarkers.length > 0;
               const tipText = tooltips?.get(cell.date);
@@ -97,12 +102,20 @@ export function CalendarGrid({
               let ariaLabel = `${d} ${monthNames[m - 1]} ${y}`;
               if (isToday) ariaLabel += ', today';
               if (isSelected) ariaLabel += ', selected';
+              if (isLinked) ariaLabel += ', milestone';
               if (hasMarker) ariaLabel += `, ${cellMarkers!.join(', ')}`;
 
               let btnClass = 'cal-grid__day';
               if (!cell.inMonth) btnClass += ' cal-grid__day--out';
-              if (isToday) btnClass += ' cal-grid__day--today';
-              if (isSelected) btnClass += ' cal-grid__day--selected';
+              if (isToday && !isSelected) btnClass += ' cal-grid__day--today';
+              if (isToday && isSelected) btnClass += ' cal-grid__day--today-selected';
+              if (!isToday && isSelected) btnClass += ' cal-grid__day--selected';
+              // Milestone-day ring (dormant): chartreuse border on all milestone days
+              // when not selected/linked; linked gets its own distinct ring
+              if (hasMarker && !isSelected && !isLinked && !isToday) btnClass += ' cal-grid__day--milestone';
+              if (hasMarker && !isSelected && !isLinked && isToday) btnClass += ' cal-grid__day--milestone-today';
+              if (isLinked && !isSelected) btnClass += ' cal-grid__day--linked';
+              if (isLinked && isSelected) btnClass += ' cal-grid__day--linked-selected';
 
               const btn = (
                 <button

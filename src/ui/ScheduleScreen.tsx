@@ -158,6 +158,43 @@ export function ScheduleScreen({
   const [calMonth, setCalMonth] = useState(startYM.month);
   const [selectedDay, setSelectedDay] = useState<ISODate | null>(null);
 
+  // Bidirectional linking state
+  // linkedDate: set by milestone hover/click or calendar day click
+  // milestoneSelected: the date pinned by a milestone click (persists past hover-end)
+  const [milestoneSelected, setMilestoneSelected] = useState<ISODate | null>(null);
+  // hoverLinkedDate: transient; set on milestone mouseenter, cleared on mouseleave
+  const [hoverLinkedDate, setHoverLinkedDate] = useState<ISODate | null>(null);
+
+  // The date to highlight in the calendar (hover takes precedence over click)
+  const calLinkedDate: ISODate | null = hoverLinkedDate ?? milestoneSelected;
+  // The date to highlight in the timeline (calendar day click)
+  const timelineHighlightDate: ISODate | null = selectedDay;
+
+  // Switch calendar to the month of a given date if it's outside the current view
+  function ensureDateVisible(date: ISODate) {
+    const { year, month } = monthOf(date);
+    if (year !== calYear || month !== calMonth) {
+      const clamped = calClamp({ year, month }, minYM, maxYM);
+      setCalYear(clamped.year);
+      setCalMonth(clamped.month);
+    }
+  }
+
+  function handleMilestoneHover(date: ISODate | null) {
+    setHoverLinkedDate(date);
+    if (date) {
+      // Switch to the month even on hover (spec: on hover-end do NOT switch back)
+      ensureDateVisible(date);
+    }
+  }
+
+  function handleMilestoneSelect(date: ISODate | null) {
+    setMilestoneSelected(date);
+    if (date) {
+      ensureDateVisible(date);
+    }
+  }
+
   const calAtMin = calYear * 12 + calMonth <= minYM.year * 12 + minYM.month;
   const calAtMax = calYear * 12 + calMonth >= maxYM.year * 12 + maxYM.month;
 
@@ -195,6 +232,8 @@ export function ScheduleScreen({
 
   function handleCalDaySelect(date: ISODate) {
     setSelectedDay(prev => prev === date ? null : date);
+    // Also clear any milestone click selection so the calendar click takes over
+    setMilestoneSelected(null);
   }
 
   // Detail line for selected day
@@ -274,7 +313,13 @@ export function ScheduleScreen({
       {/* Two-column layout: milestones left, calendar right on ≥768px */}
       <div class="schedule-columns">
         <div class="schedule-columns__milestones">
-          <Timeline milestones={milestones} />
+          <Timeline
+            milestones={milestones}
+            highlightDate={timelineHighlightDate ?? undefined}
+            selectedDate={milestoneSelected}
+            onMilestoneHover={handleMilestoneHover}
+            onMilestoneSelect={handleMilestoneSelect}
+          />
         </div>
 
         {/* Inline calendar card */}
@@ -307,6 +352,7 @@ export function ScheduleScreen({
             grid={calGrid}
             today={today as ISODate}
             selected={selectedDay ?? undefined}
+            linkedDate={calLinkedDate}
             markers={calMarkers}
             tooltips={calTooltips}
             onSelectDay={handleCalDaySelect}
