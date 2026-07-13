@@ -65,41 +65,35 @@ export function CalculatorCard({
   function handleAnchorTypeChange(type: AnchorType) {
     setAnchorType(type);
     setDateError('');
-    // rebuild anchor if we already have a valid date
-    const dateIsValid = isValidISODate(dateValue);
-    if (dateValue && dateIsValid) {
-      const newAnchor: Anchor = {
-        type,
-        date: dateValue,
-        ...(type === 'ga_on_date' ? { ga: { weeks: gaWeeks, days: gaDays } } : {}),
-      };
-      onAnchorChange(newAnchor);
-    }
   }
 
   function handleDateChange(val: string) {
     setDateValue(val);
     setDateError('');
-    if (!val) return;
-    const valid = isValidISODate(val);
-    if (!valid) {
-      setDateError('Please enter a valid date.');
-      return;
-    }
-    const newAnchor: Anchor = {
-      type: anchorType,
-      date: val,
-      ...(anchorType === 'ga_on_date' ? { ga: { weeks: gaWeeks, days: gaDays } } : {}),
-    };
-    onAnchorChange(newAnchor);
   }
 
   function handleGAChange(weeks: number, days: number) {
     setGaWeeks(weeks);
     setGaDays(days);
-    if (dateValue && isValidISODate(dateValue) && anchorType === 'ga_on_date') {
-      onAnchorChange({ type: 'ga_on_date', date: dateValue, ga: { weeks, days } });
+  }
+
+  function handleCalculate() {
+    if (!dateValue) return;
+    if (!isValidISODate(dateValue)) {
+      setDateError('Please enter a valid date.');
+      return;
     }
+    if (anchorType === 'ga_on_date' && (gaWeeks === 0 && gaDays === 0)) {
+      setDateError('Please enter gestational age (weeks and/or days).');
+      return;
+    }
+    setDateError('');
+    const newAnchor: Anchor = {
+      type: anchorType,
+      date: dateValue,
+      ...(anchorType === 'ga_on_date' ? { ga: { weeks: gaWeeks, days: gaDays } } : {}),
+    };
+    onAnchorChange(newAnchor);
   }
 
   function handleSettingsChange(partial: Partial<Settings>) {
@@ -156,6 +150,7 @@ export function CalculatorCard({
               type="date"
               value={dateValue}
               onInput={e => handleDateChange((e.target as HTMLInputElement).value)}
+              onChange={e => handleDateChange((e.target as HTMLInputElement).value)}
             />
             {dateError && <p class="form-field__error">{dateError}</p>}
           </div>
@@ -187,6 +182,16 @@ export function CalculatorCard({
               </div>
             </div>
           )}
+
+          {/* Calculate button */}
+          <button
+            class="btn btn--primary"
+            style="width: 100%; margin-bottom: var(--space-md);"
+            onClick={handleCalculate}
+            disabled={!dateValue}
+          >
+            Calculate
+          </button>
 
           {/* Derived dates grid */}
           {pregnancy && (
