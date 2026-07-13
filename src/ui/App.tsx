@@ -9,10 +9,11 @@ import { todayLocalISO } from '../core/dates';
 import { NavBar } from './NavBar';
 import { SetupWizard } from './SetupWizard';
 import { ScheduleScreen } from './ScheduleScreen';
+import { CalendarScreen } from './CalendarScreen';
 import { ExportScreen } from './ExportScreen';
 import { formatMilestoneDate } from '../core/summary';
 
-type Screen = 'setup' | 'schedule' | 'export';
+type Screen = 'setup' | 'schedule' | 'calendar' | 'export';
 
 function msUntilMidnight(): number {
   const now = new Date();
@@ -37,6 +38,7 @@ function nextTheme(current: Theme): Theme {
 function screenTitle(screen: Screen): string {
   if (screen === 'setup') return '';
   if (screen === 'schedule') return 'Schedule';
+  if (screen === 'calendar') return 'Calendar';
   return 'Export';
 }
 
@@ -124,21 +126,31 @@ export function App() {
     setScreen('setup');
   }
 
+  function handleGoToCalendar() {
+    setScreen('calendar');
+  }
+
+  function handleBackFromCalendar() {
+    setScreen('schedule');
+  }
+
   function handleGoToExport() {
     setScreen('export');
   }
 
   function handleBackFromExport() {
-    setScreen('schedule');
+    setScreen('calendar');
   }
 
   // NavBar back/title config per screen
   const navBackLabel =
     screen === 'setup' && fromSchedule ? 'Back' :
+    screen === 'calendar' ? 'Back' :
     screen === 'export' ? 'Back' :
     undefined;
   const navOnBack =
     screen === 'setup' && fromSchedule ? handleBackToSchedule :
+    screen === 'calendar' ? handleBackFromCalendar :
     screen === 'export' ? handleBackFromExport :
     undefined;
 
@@ -184,6 +196,16 @@ export function App() {
             today={today}
             onEditInputs={handleEditInputs}
             onStartOver={handleStartOver}
+            onCalendar={handleGoToCalendar}
+            onExport={handleGoToExport}
+          />
+        )}
+
+        {screen === 'calendar' && milestones && !error && (
+          <CalendarScreen
+            milestones={milestones}
+            today={today}
+            onBack={handleBackFromCalendar}
             onExport={handleGoToExport}
           />
         )}

@@ -1155,11 +1155,8 @@ body {
   font-style: italic;
 }
 
-/* ─── Date picker wrapper (Bug 1 — Safari ghost-date fix) ───────────────── */
-/* A positioned container: visible affordance behind, native input on top at  */
-/* opacity:0 so tapping opens the OS date picker.                             */
+/* ─── Date picker wrapper (custom popup trigger button) ─────────────────── */
 .date-picker-wrapper {
-  position: relative;
   width: 100%;
   min-height: 44px;
   border: 1.5px solid var(--color-accent);
@@ -1169,14 +1166,15 @@ body {
   align-items: center;
   padding: var(--space-sm) var(--space-md);
   cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
 }
 
 .date-picker-wrapper--error {
   border-color: var(--color-error-text);
 }
 
-/* Focus ring when the invisible native input is focused */
-.date-picker-wrapper:focus-within {
+.date-picker-wrapper:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -1201,20 +1199,6 @@ body {
   font-size: 0.78rem;
   color: var(--color-text-muted);
   font-style: italic;
-}
-
-/* The real native input: invisible, full-size overlay so any tap opens picker */
-.date-picker-wrapper__native {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  /* Keep it reachable for keyboard / AT */
-  z-index: 1;
-  /* Prevent own appearance from leaking through at opacity:0 on some engines */
-  color: transparent;
 }
 
 /* ─── Wizard confirm summary ─────────────────────────────────────────────── */
@@ -1250,6 +1234,441 @@ body {
   color: var(--color-text);
 }
 
+/* ─── Hover animations ───────────────────────────────────────────────────── */
+/* Wrapped in @media (hover: hover) — touch-only devices never get jank.     */
+/* Reduced-motion: transform is suppressed; colour/opacity transitions only. */
+
+@media (hover: hover) {
+  /* Anchor cards in wizard */
+  .anchor-card {
+    transition:
+      border-color var(--transition),
+      background var(--transition),
+      transform 120ms ease,
+      box-shadow 120ms ease;
+  }
+  .anchor-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+  .anchor-card:active {
+    transform: translateY(0);
+  }
+
+  /* Primary buttons */
+  .btn--primary {
+    transition:
+      background var(--transition),
+      transform 120ms ease,
+      box-shadow 120ms ease,
+      filter 120ms ease;
+  }
+  .btn--primary:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(128, 0, 32, 0.25);
+    filter: brightness(1.08);
+  }
+  .btn--primary:not(:disabled):active {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+
+  /* Secondary buttons */
+  .btn--secondary {
+    transition:
+      background var(--transition),
+      transform 120ms ease,
+      box-shadow 120ms ease;
+  }
+  .btn--secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.10);
+  }
+  .btn--secondary:active {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anchor-card,
+  .btn--primary,
+  .btn--secondary {
+    transition: background var(--transition), color var(--transition), border-color var(--transition), filter var(--transition) !important;
+    transform: none !important;
+  }
+}
+
+/* ─── Terminology tooltips (.tip) ────────────────────────────────────────── */
+/* CSS-only: tooltip text lives in data-tip. Shown on :hover and :focus.     */
+/* Keyboard/touch: clicking/tapping the element toggles focus on it.         */
+
+.tip {
+  position: relative;
+  display: inline;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  color: inherit;
+}
+
+.tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1c1c1e;
+  color: #f5f0f2;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  white-space: normal;
+  width: max-content;
+  max-width: 240px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.tip:hover::after,
+.tip:focus::after,
+.tip:focus-within::after {
+  opacity: 1;
+}
+
+/* Dark mode tooltip colours */
+[data-theme="light"] .tip::after {
+  background: #1c1c1e;
+  color: #f5f0f2;
+}
+[data-theme="dark"] .tip::after {
+  background: #f5f0f2;
+  color: #1c1c1e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .tip::after {
+    background: #f5f0f2;
+    color: #1c1c1e;
+  }
+}
+
+/* ─── Calendar grid (shared: picker + calendar screen) ───────────────────── */
+
+.cal-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.cal-grid__dow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding-bottom: var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cal-grid__cell {
+  padding: 2px;
+  text-align: center;
+}
+
+/* Compact mode — date picker popup */
+.cal-grid--compact .cal-grid__day {
+  width: 100%;
+  min-width: 36px;
+  min-height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+/* Full mode — calendar screen */
+.cal-grid--full .cal-grid__day {
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+/* Out-of-month cells — muted */
+.cal-grid__day--out {
+  color: var(--color-text-muted) !important;
+  opacity: 0.45;
+}
+
+/* Today — chartreuse outline */
+.cal-grid__day--today {
+  outline: 2px solid var(--color-highlight);
+  outline-offset: -2px;
+}
+
+/* Selected — burgundy fill */
+.cal-grid__day--selected {
+  background: var(--color-accent) !important;
+  color: #fff !important;
+  outline: none;
+}
+
+.cal-grid__day:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .cal-grid__day:not(.cal-grid__day--selected):hover {
+    background: var(--color-surface-2);
+  }
+}
+
+/* Milestone dots */
+.cal-grid__dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-highlight);
+  margin: 0 auto;
+}
+
+.cal-grid__dot-sm {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-highlight);
+  margin: 0 auto;
+}
+
+/* ─── Date picker popup ──────────────────────────────────────────────────── */
+
+.date-picker-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Backdrop — only visible on narrow screens (≤480px) */
+.dp-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 199;
+}
+
+.dp-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+}
+
+/* On narrow screens: center with backdrop */
+@media (max-width: 480px) {
+  .dp-popup {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    left: 0;
+  }
+
+  .dp-backdrop {
+    display: block;
+  }
+}
+
+.dp-panel {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: var(--space-md);
+  width: 340px;
+  max-width: calc(100vw - 32px);
+}
+
+@media (min-width: 481px) {
+  .dp-panel {
+    width: 380px;
+  }
+}
+
+.dp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.dp-month-label {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dp-nav-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.dp-nav-btn:hover:not(:disabled) {
+  background: var(--color-surface-2);
+  color: var(--color-accent);
+}
+
+.dp-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.dp-nav-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.dp-close-btn {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: none;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  min-height: 36px;
+}
+
+.dp-close-btn:hover {
+  background: var(--color-surface-2);
+}
+
+.dp-close-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Calendar screen ────────────────────────────────────────────────────── */
+
+.cal-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cal-screen__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-screen__month-label {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* Legend below the grid */
+.cal-legend {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-sm);
+}
+
+.cal-legend__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.cal-legend__dot {
+  color: var(--color-highlight);
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  margin-top: 3px;
+}
+
+.cal-legend__text {
+  color: var(--color-text-secondary);
+}
+
+.cal-legend__item--past .cal-legend__text {
+  color: var(--color-text-muted);
+}
+
+.cal-legend__item--today .cal-legend__text {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ─── Action row modifier for schedule screen ────────────────────────────── */
+.action-row--wrap {
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.action-row__right {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
 /* ─── Print styles ───────────────────────────────────────────────────────── */
 .print-schedule {
   display: none;
@@ -1276,6 +1695,7 @@ body {
   body:has(.print-schedule) .screen-content,
   body:has(.print-schedule) .ga-progress,
   body:has(.print-schedule) .phase-banner,
+  body:has(.print-schedule) .cal-screen,
   body:has(.print-schedule) .hcg-calc__row,
   body:has(.print-schedule) .hcg-calc__result,
   body:has(.print-schedule) .hcg-calc__footnote,
