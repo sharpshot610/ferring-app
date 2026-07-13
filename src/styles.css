@@ -51,7 +51,6 @@
   --color-accent-dark: #5a0016;
 
   --color-highlight: #9BBF1F;
-  --color-highlight-dark: #6e8a14;
 
   --color-bg: #f9f7f4;
   --color-surface: #ffffff;
@@ -381,26 +380,6 @@ body {
   white-space: normal;
 }
 
-/* ─── Calculator card ────────────────────────────────────────────────────── */
-.calculator-card__collapsed-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-}
-
-.calculator-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-md);
-}
-
-.calculator-card__title {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
 
 /* ─── Segmented control ──────────────────────────────────────────────────── */
 .segmented-control {
@@ -1081,7 +1060,6 @@ body {
   body:has(.print-schedule) .action-row,
   body:has(.print-schedule) .today-header,
   body:has(.print-schedule) .timeline,
-  body:has(.print-schedule) .calculator-card,
   body:has(.print-schedule) .wizard-card,
   body:has(.print-schedule) .export-section,
   body:has(.print-schedule) .screen-content,

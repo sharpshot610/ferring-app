@@ -78,6 +78,11 @@ export function SetupWizard({
   const [dateError, setDateError] = useState('');
 
   function handleSelectType(type: AnchorType) {
+    if (type !== anchorType) {
+      setDateValue('');
+      setGaWeeks(0);
+      setGaDays(0);
+    }
     setAnchorType(type);
     setDateError('');
     setStep(2);
