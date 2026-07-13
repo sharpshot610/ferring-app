@@ -8,6 +8,7 @@ import { TodayHeader } from './TodayHeader';
 import { Timeline } from './Timeline';
 import { ReverseQuery } from './ReverseQuery';
 import { formatMilestoneDate } from '../core/summary';
+import { DatePickerField } from './DatePickerField';
 
 const PREGNANCY_LABELS: Record<string, string> = {
   lmp: 'Last menstrual period',
@@ -68,7 +69,7 @@ function nextStepLine(milestones: Milestone[]): string | null {
   if (!next) return null;
   if (next.status === 'today') return `Next: ${next.label} — today`;
   if (next.daysUntil === 1) return `Next: ${next.label} — tomorrow`;
-  return `Next: ${next.label} in ${next.daysUntil} day${next.daysUntil === 1 ? '' : 's'}`;
+  return `Next: ${next.label} in ${next.daysUntil} days`;
 }
 
 // Feature 4: hCG doubling calculator state and helpers
@@ -81,7 +82,7 @@ interface HcgState {
   h2: string;
 }
 
-const INITIAL_HCG: HcgState = { v1: '', d1: '', h1: '9', v2: '', d2: '', h2: '9' };
+const INITIAL_HCG: HcgState = { v1: '', d1: '', h1: '09', v2: '', d2: '', h2: '09' };
 
 function friendlyAssessment(assessment: 'reassuring' | 'borderline' | 'slow', hours: number): string {
   const h = hours.toFixed(1);
@@ -224,12 +225,11 @@ export function ScheduleScreen({
                 </div>
                 <div class="form-field" style="margin-bottom:0">
                   <label class="form-field__label" for="hcg-d1">Date</label>
-                  <input
-                    id="hcg-d1"
-                    class="input"
-                    type="date"
+                  <DatePickerField
                     value={hcg.d1}
-                    onInput={e => setHcg(s => ({ ...s, d1: (e.target as HTMLInputElement).value }))}
+                    hasError={false}
+                    onChange={val => setHcg(s => ({ ...s, d1: val }))}
+                    placeholder="Choose date"
                   />
                 </div>
                 <div class="form-field" style="margin-bottom:0">
@@ -263,12 +263,11 @@ export function ScheduleScreen({
                 </div>
                 <div class="form-field" style="margin-bottom:0">
                   <label class="form-field__label" for="hcg-d2">Date</label>
-                  <input
-                    id="hcg-d2"
-                    class="input"
-                    type="date"
+                  <DatePickerField
                     value={hcg.d2}
-                    onInput={e => setHcg(s => ({ ...s, d2: (e.target as HTMLInputElement).value }))}
+                    hasError={false}
+                    onChange={val => setHcg(s => ({ ...s, d2: val }))}
+                    placeholder="Choose date"
                   />
                 </div>
                 <div class="form-field" style="margin-bottom:0">

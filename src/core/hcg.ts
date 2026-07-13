@@ -37,9 +37,21 @@ export function hcgDoublingTime(
   first: HcgReading,
   second: HcgReading,
 ): DoublingResult {
+  if (!Number.isFinite(first.value) || !Number.isFinite(second.value)) {
+    throw new Error(
+      'Please enter a numeric hCG value for both readings.',
+    );
+  }
+
   if (first.value <= 0 || second.value <= 0) {
     throw new Error(
       'hCG values must be greater than zero. Please check the readings.',
+    );
+  }
+
+  if (!Number.isFinite(first.hourOfDay) || !Number.isFinite(second.hourOfDay)) {
+    throw new Error(
+      'Please enter a numeric hCG value for both readings.',
     );
   }
 

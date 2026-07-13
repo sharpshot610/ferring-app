@@ -106,6 +106,34 @@ describe('hcgDoublingTime — assessment boundary at 72h', () => {
   });
 });
 
+// ── non-finite value guards (NaN / Infinity) ──────────────────────────────────
+
+describe('hcgDoublingTime — throws on non-finite hCG values', () => {
+  it('throws when first.value is NaN (e.g. from parseFloat(""))', () => {
+    expect(() =>
+      hcgDoublingTime(reading('2024-03-01', NaN, 9), reading('2024-03-03', 200, 9)),
+    ).toThrow('Please enter a numeric hCG value for both readings.');
+  });
+
+  it('throws when second.value is NaN', () => {
+    expect(() =>
+      hcgDoublingTime(reading('2024-03-01', 100, 9), reading('2024-03-03', NaN, 9)),
+    ).toThrow('Please enter a numeric hCG value for both readings.');
+  });
+
+  it('throws when first.value is Infinity', () => {
+    expect(() =>
+      hcgDoublingTime(reading('2024-03-01', Infinity, 9), reading('2024-03-03', 200, 9)),
+    ).toThrow('Please enter a numeric hCG value for both readings.');
+  });
+
+  it('throws when hourOfDay is NaN (e.g. from parseInt("", 10) = NaN)', () => {
+    expect(() =>
+      hcgDoublingTime(reading('2024-03-01', 100, NaN), reading('2024-03-03', 200, 9)),
+    ).toThrow('Please enter a numeric hCG value for both readings.');
+  });
+});
+
 // ── error conditions ──────────────────────────────────────────────────────────
 
 describe('hcgDoublingTime — throws on invalid inputs', () => {

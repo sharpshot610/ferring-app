@@ -2,44 +2,7 @@ import { useState } from 'preact/hooks';
 import type { AnchorType, Anchor, Settings } from '../core/calc';
 import { isValidISODate } from '../core/dates';
 import { formatMilestoneDate } from '../core/summary';
-
-// ─── DatePickerField ──────────────────────────────────────────────────────────
-// Renders a tappable affordance when no date is chosen (fixes Safari ghost-date
-// placeholder confusion). The native <input type="date"> sits invisibly on top
-// so tapping anywhere opens the OS picker.
-interface DatePickerFieldProps {
-  value: string;        // ISO date string or ''
-  hasError: boolean;
-  onChange: (val: string) => void;
-}
-
-function DatePickerField({ value, hasError, onChange }: DatePickerFieldProps) {
-  function handleChange(e: Event) {
-    onChange((e.target as HTMLInputElement).value);
-  }
-
-  return (
-    <div class={['date-picker-wrapper', hasError ? 'date-picker-wrapper--error' : ''].filter(Boolean).join(' ')}>
-      {value ? (
-        <span class="date-picker-wrapper__chosen">
-          {formatMilestoneDate(value)}
-          <span class="date-picker-wrapper__change-hint">Tap to change</span>
-        </span>
-      ) : (
-        <span class="date-picker-wrapper__placeholder">📅 Tap to choose a date</span>
-      )}
-      {/* Native input sits invisibly on top; cursor:pointer opens OS picker */}
-      <input
-        class="date-picker-wrapper__native"
-        type="date"
-        value={value}
-        aria-label="Choose date"
-        onInput={handleChange}
-        onChange={handleChange}
-      />
-    </div>
-  );
-}
+import { DatePickerField } from './DatePickerField';
 
 interface Props {
   anchor: Anchor | null;

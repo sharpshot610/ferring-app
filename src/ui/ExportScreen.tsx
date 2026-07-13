@@ -98,9 +98,10 @@ export function ExportScreen({ pregnancy, milestones, today, onBack }: Props) {
     if (!canShare) return;
     const text = scheduleSummaryText(pregnancy, milestones, today);
     navigator.share({ title: 'IVF Wheel schedule', text }).catch((err: unknown) => {
-      // Silently ignore AbortError (user cancelled); surface other errors
+      // Silently ignore AbortError (user cancelled)
       if (err instanceof Error && err.name === 'AbortError') return;
-      // Other errors: nothing actionable to show in this path
+      // Non-abort errors: fall back to the copy-summary path so the user still gets the content
+      handleCopySummary();
     });
   }
 
