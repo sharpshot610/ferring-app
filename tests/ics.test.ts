@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { generateICS } from '../src/core/ics';
 import type { IcsOptions } from '../src/core/ics';
 import type { Milestone } from '../src/core/milestones';
+import type { MilestoneId } from '../src/core/milestones';
 import { getMilestones } from '../src/core/milestones';
 import { computePregnancy } from '../src/core/calc';
 import { retrievalLeap } from './fixtures';
@@ -142,7 +143,7 @@ describe('generateICS — UID determinism', () => {
     expect(first).toBe(second);
   });
 
-  it('UID format is date-id@ivf-wheel', () => {
+  it('UID format is id@ivf-wheel (date-stable for re-import deduplication)', () => {
     const ms: Milestone[] = [{
       id: 'retrieval',
       label: 'Egg retrieval / IUI',
@@ -152,7 +153,44 @@ describe('generateICS — UID determinism', () => {
       daysUntil: -10,
     }];
     const ics = generateICS(ms, baseOpts());
-    expect(ics).toContain('UID:2024-02-20-retrieval@ivf-wheel\r\n');
+    expect(ics).toContain('UID:retrieval@ivf-wheel\r\n');
+  });
+
+  it('same milestone id with two different dates produces the same UID', () => {
+    function makeMs(date: string): Milestone[] {
+      return [{
+        id: 'edd',
+        label: 'Due date',
+        date,
+        implied: false,
+        status: 'future',
+        daysUntil: 10,
+      }];
+    }
+    const ics1 = generateICS(makeMs('2024-03-15'), baseOpts());
+    const ics2 = generateICS(makeMs('2025-09-01'), baseOpts());
+    const uid1 = ics1.split('\r\n').find(l => l.startsWith('UID:'))!;
+    const uid2 = ics2.split('\r\n').find(l => l.startsWith('UID:'))!;
+    expect(uid1).toBe('UID:edd@ivf-wheel');
+    expect(uid1).toBe(uid2);
+  });
+
+  it('two different milestone ids produce different UIDs', () => {
+    function makeMs(id: MilestoneId): Milestone[] {
+      return [{
+        id,
+        label: 'Test',
+        date: '2024-03-15',
+        implied: false,
+        status: 'future',
+        daysUntil: 10,
+      }];
+    }
+    const ics1 = generateICS(makeMs('edd'), baseOpts());
+    const ics2 = generateICS(makeMs('retrieval'), baseOpts());
+    const uid1 = ics1.split('\r\n').find(l => l.startsWith('UID:'))!;
+    const uid2 = ics2.split('\r\n').find(l => l.startsWith('UID:'))!;
+    expect(uid1).not.toBe(uid2);
   });
 });
 
@@ -227,7 +265,7 @@ describe('generateICS — implied milestone', () => {
 });
 
 describe('generateICS — line folding', () => {
-  it('folds content lines longer than 75 octets', () => {
+  it('folds content lines longer than 75 octets (ASCII)', () => {
     const longLabel = 'A very long label that will definitely exceed the seventy-five octet limit in the ICS output line';
     const ms: Milestone[] = [{
       id: 'edd',
@@ -238,14 +276,87 @@ describe('generateICS — line folding', () => {
       daysUntil: 1,
     }];
     const ics = generateICS(ms, baseOpts());
-    // All non-folded lines should be ≤ 75 chars
+    // Every physical line (after CRLF split) must be ≤ 75 UTF-8 bytes.
     const crlfLines = ics.split('\r\n');
     for (const line of crlfLines) {
-      // Continuation lines start with a space; the space is part of the line
-      expect(line.length).toBeLessThanOrEqual(75);
+      expect(
+        new TextEncoder().encode(line).length,
+        `Line exceeds 75 UTF-8 bytes: ${JSON.stringify(line)}`,
+      ).toBeLessThanOrEqual(75);
     }
-    // The folded continuation lines should start with a space
+    // Folded continuation lines start with a space
     expect(ics).toContain('\r\n ');
+  });
+
+  it('folds correctly when label contains β (2-byte UTF-8 character)', () => {
+    // β is U+03B2, 2 UTF-8 bytes. A SUMMARY line containing many β chars
+    // must be folded by byte count, not char count.
+    const label = 'β-hCG test repeated β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β β';
+    const ms: Milestone[] = [{
+      id: 'betaHcg',
+      label,
+      date: '2024-03-06',
+      implied: false,
+      status: 'future',
+      daysUntil: 33,
+    }];
+    const ics = generateICS(ms, baseOpts());
+    const crlfLines = ics.split('\r\n');
+    for (const line of crlfLines) {
+      expect(
+        new TextEncoder().encode(line).length,
+        `Line exceeds 75 UTF-8 bytes: ${JSON.stringify(line)}`,
+      ).toBeLessThanOrEqual(75);
+    }
+    // Verify round-trip: unfolding (remove CRLF+space sequences) restores the
+    // original logical line.
+    const summaryLogical = ics
+      .split('\r\n')
+      .reduce((acc, line) => {
+        if (line.startsWith(' ')) return acc + line.slice(1);
+        return acc ? acc + '\n' + line : line;
+      }, '');
+    const summaryLine = summaryLogical.split('\n').find(l => l.startsWith('SUMMARY:'))!;
+    expect(summaryLine).toContain(label.replace(/,/g, '\\,').replace(/;/g, '\\;'));
+  });
+
+  it('does not split surrogate pairs when label contains astral emoji', () => {
+    // 🧬 is U+1F9EC, 4 UTF-8 bytes — requires 2 UTF-16 code units (surrogate pair).
+    // Slicing by code unit (String.prototype.slice) would corrupt the character;
+    // our code point iterator (for...of) must not split it.
+    const label = '🧬 DNA test label that is long enough to require folding because it exceeds seventy five bytes total yes';
+    const ms: Milestone[] = [{
+      id: 'edd',
+      label,
+      date: '2024-03-15',
+      implied: false,
+      status: 'future',
+      daysUntil: 1,
+    }];
+    const ics = generateICS(ms, baseOpts());
+    const crlfLines = ics.split('\r\n');
+    for (const line of crlfLines) {
+      expect(
+        new TextEncoder().encode(line).length,
+        `Line exceeds 75 UTF-8 bytes: ${JSON.stringify(line)}`,
+      ).toBeLessThanOrEqual(75);
+    }
+    // Verify round-trip: unfold by stripping CRLF+space, then check the emoji
+    // is intact in the reconstructed SUMMARY logical line.
+    const summaryLogical = ics
+      .split('\r\n')
+      .reduce((acc, line) => {
+        if (line.startsWith(' ')) return acc + line.slice(1);
+        return acc ? acc + '\n' + line : line;
+      }, '');
+    const summaryLine = summaryLogical.split('\n').find(l => l.startsWith('SUMMARY:'))!;
+    // The emoji must survive folding and unfolding without corruption
+    expect(summaryLine).toContain('🧬');
+    // If the surrogate pair were split, codePointAt on the emoji position would
+    // return a surrogate value (0xD800–0xDFFF) rather than 0x1F9EC.
+    const emojiIdx = summaryLine.indexOf('🧬');
+    expect(emojiIdx).toBeGreaterThan(-1);
+    expect(summaryLine.codePointAt(emojiIdx)).toBe(0x1F9EC);
   });
 });
 

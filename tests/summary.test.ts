@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { scheduleSummaryText } from '../src/core/summary';
+import { scheduleSummaryText, formatMilestoneDate } from '../src/core/summary';
 import type { Milestone } from '../src/core/milestones';
 import { getMilestones } from '../src/core/milestones';
 import { computePregnancy } from '../src/core/calc';
+import { addDays } from '../src/core/dates';
 import { retrievalLeap, noLeap2025 } from './fixtures';
 
 const TODAY = '2024-02-01';
@@ -119,5 +120,37 @@ describe('scheduleSummaryText — gestational age correctness', () => {
     const ms = getMilestones(p, '2024-04-01');
     const text = scheduleSummaryText(p, ms, '2024-04-01');
     expect(text).toContain('Gestational age today: 7w06d');
+  });
+});
+
+describe('formatMilestoneDate — September uses "Sept"', () => {
+  it('renders a September date with "Sept" not "Sep"', () => {
+    // 2026-09-15 is a Tuesday
+    const result = formatMilestoneDate('2026-09-15');
+    expect(result).toContain('Sept');
+    expect(result).not.toMatch(/\bSep\b/);
+    expect(result).toBe('Tue 15 Sept 2026');
+  });
+});
+
+describe('formatMilestoneDate — weekday sweep for all of 2026', () => {
+  it('weekday name matches the epoch-day ground truth for every day of 2026', () => {
+    // Reference: epoch day 0 = 1970-01-01 = Thursday.
+    // We verify the formatter's weekday against a second independent computation
+    // using Date.UTC (which is always correct) across all 365 days of 2026.
+    const DAY_NAMES_SUN_IDX = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const start = '2026-01-01';
+    for (let offset = 0; offset < 365; offset++) {
+      const iso = addDays(start, offset);
+      const formatted = formatMilestoneDate(iso);
+      // Ground truth via Date.UTC
+      const [y, m, d] = iso.split('-').map(Number);
+      const utcDow = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0=Sun
+      const expectedDay = DAY_NAMES_SUN_IDX[utcDow];
+      expect(
+        formatted.startsWith(expectedDay),
+        `${iso}: expected weekday ${expectedDay}, got formatted "${formatted}"`,
+      ).toBe(true);
+    }
   });
 });

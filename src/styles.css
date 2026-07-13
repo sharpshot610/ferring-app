@@ -801,23 +801,26 @@ body {
 }
 
 @media print {
-  /* Hide all interactive chrome */
-  .nav-bar,
-  .app-header,
-  .app-footer,
-  .btn,
-  .collapsible__trigger,
-  .milestone-checklist,
-  .export-btn-row,
-  .export-hint,
-  .action-row,
-  .today-header,
-  .timeline,
-  .calculator-card,
-  .export-section > *:not(.print-schedule),
-  .screen-content > *:not(.print-schedule),
-  select,
-  input {
+  /* Only blank the interactive chrome when a .print-schedule section exists
+     (i.e. when a pregnancy has been computed). When the user prints from the
+     setup screen — where no .print-schedule is rendered — this block is skipped
+     and the page prints normally. :has() is supported in all current browsers. */
+  body:has(.print-schedule) .nav-bar,
+  body:has(.print-schedule) .app-header,
+  body:has(.print-schedule) .app-footer,
+  body:has(.print-schedule) .btn,
+  body:has(.print-schedule) .collapsible__trigger,
+  body:has(.print-schedule) .milestone-checklist,
+  body:has(.print-schedule) .export-btn-row,
+  body:has(.print-schedule) .export-hint,
+  body:has(.print-schedule) .action-row,
+  body:has(.print-schedule) .today-header,
+  body:has(.print-schedule) .timeline,
+  body:has(.print-schedule) .calculator-card,
+  body:has(.print-schedule) .export-section,
+  body:has(.print-schedule) .screen-content,
+  body:has(.print-schedule) select,
+  body:has(.print-schedule) input {
     display: none !important;
   }
 

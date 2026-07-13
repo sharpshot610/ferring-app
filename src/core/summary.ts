@@ -4,25 +4,34 @@
 import type { Milestone } from './milestones';
 import type { Pregnancy } from './calc';
 import { gestationalAgeOn } from './calc';
+import { toEpochDay } from './dates';
 
 // Fixed English day and month names — no Intl, no new Date() for formatting,
 // fully deterministic and timezone-free.
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// Day names are Mon-indexed (Mon=0 … Sun=6) to match the epoch-day formula.
+const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec',
 ];
 
 /**
  * Format an ISODate "YYYY-MM-DD" → "Thu 12 Nov 2026".
- * Uses Date.UTC to get the day-of-week — pure since we pass a specific date.
+ * Weekday is computed purely from toEpochDay (no new Date() for formatting).
+ * 1970-01-01 was a Thursday (Mon-index 3); formula: ((epochDay % 7) + 10) % 7
+ * gives a stable Mon=0 index immune to JS negative-modulo.
  */
-function formatDate(iso: string): string {
+export function formatMilestoneDate(iso: string): string {
+  const epochDay = toEpochDay(iso);
+  // 1970-01-01 is Thu = index 3 in Mon-indexed table.
+  // ((epochDay % 7) + 3 + 7) % 7 maps epoch day → Mon-indexed weekday.
+  const dowIdx = ((epochDay % 7) + 3 + 7) % 7;
   const [y, m, d] = iso.split('-').map(Number);
-  // Use Date.UTC so timezone does not affect day-of-week calculation.
-  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return `${DAY_NAMES[dow]} ${d} ${MONTH_NAMES[m - 1]} ${y}`;
+  return `${DAY_NAMES[dowIdx]} ${d} ${MONTH_NAMES[m - 1]} ${y}`;
 }
+
+// Keep the module-private alias for use within this file.
+const formatDate = formatMilestoneDate;
 
 function pad2(n: number): string {
   return String(n).padStart(2, '0');

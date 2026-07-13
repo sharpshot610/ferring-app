@@ -10,6 +10,7 @@ import { NavBar } from './NavBar';
 import { CalculatorCard } from './CalculatorCard';
 import { ScheduleScreen } from './ScheduleScreen';
 import { ExportScreen } from './ExportScreen';
+import { formatMilestoneDate } from '../core/summary';
 
 type Screen = 'setup' | 'schedule' | 'export';
 
@@ -197,6 +198,35 @@ export function App() {
           />
         )}
       </main>
+
+      {/* Print-only section — hidden on screen via CSS, visible @media print.
+          Rendered at App level so Cmd+P/Ctrl+P works from any screen that has
+          a computed pregnancy. The blanket "hide everything" print rules are
+          scoped to body:has(.print-schedule) so printing the setup screen
+          (no pregnancy) still renders the page normally. */}
+      {pregnancy && milestones && (
+        <section class="print-schedule" aria-hidden="true">
+          <h1 class="print-schedule__title">IVF Wheel — Schedule</h1>
+          <p class="print-schedule__meta">Generated {today}</p>
+          <table class="print-schedule__table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Milestone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {milestones.map(m => (
+                <tr key={m.id}>
+                  <td>{formatMilestoneDate(m.date)}</td>
+                  <td>{m.label}{m.implied ? ' (estimated)' : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="print-schedule__disclaimer">Not medical advice — confirm all dates with your clinic.</p>
+        </section>
+      )}
 
       <footer class="app-footer">
         <p class="disclaimer">

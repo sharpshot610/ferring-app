@@ -32,20 +32,49 @@ function isoToCompact(iso: string): string {
 }
 
 /**
+ * Return the number of UTF-8 bytes a single Unicode code point occupies.
+ * Pure: no TextEncoder, no Buffer — uses code-point ranges per RFC 3629.
+ */
+function utf8ByteLength(cp: number): number {
+  if (cp <= 0x7f) return 1;
+  if (cp <= 0x7ff) return 2;
+  if (cp <= 0xffff) return 3;
+  return 4; // supplementary planes (U+10000–U+10FFFF)
+}
+
+/**
  * Fold a content line per RFC 5545 §3.1:
  * lines longer than 75 octets are split with CRLF + single space.
- * We fold at 75 chars (ASCII-safe; labels are ASCII).
+ * Folds by UTF-8 byte count (not UTF-16 code units) to handle multibyte
+ * characters such as β (U+03B2, 2 bytes) and emoji (4 bytes) correctly.
+ * First line ≤ 75 octets; each continuation line ≤ 75 octets (leading space
+ * counts as 1 octet, leaving 74 octets of content).
  */
 function foldLine(line: string): string {
-  if (line.length <= 75) return line;
+  // Fast path: pure ASCII lines (code unit count == byte count)
+  if (line.length <= 75 && /^[\x00-\x7f]*$/.test(line)) return line;
+
   const parts: string[] = [];
-  // First chunk: 75 chars
-  parts.push(line.slice(0, 75));
-  let pos = 75;
-  while (pos < line.length) {
-    // Continuation lines start with a space, leaving 74 chars of content
-    parts.push(' ' + line.slice(pos, pos + 74));
-    pos += 74;
+  let current = '';
+  let currentBytes = 0;
+  let isFirst = true;
+  const limit = () => (isFirst ? 75 : 74); // first line 75; continuations 74 (+ leading space = 75)
+
+  for (const ch of line) { // iterates code points, not code units
+    const cp = ch.codePointAt(0)!;
+    const bytes = utf8ByteLength(cp);
+    if (currentBytes + bytes > limit()) {
+      parts.push(isFirst ? current : ' ' + current);
+      current = ch;
+      currentBytes = bytes;
+      isFirst = false;
+    } else {
+      current += ch;
+      currentBytes += bytes;
+    }
+  }
+  if (current.length > 0 || parts.length === 0) {
+    parts.push(isFirst ? current : ' ' + current);
   }
   return parts.join('\r\n');
 }
@@ -81,7 +110,7 @@ export function generateICS(milestones: Milestone[], opts: IcsOptions): string {
   for (const ms of milestones) {
     const dtstart = isoToCompact(ms.date);
     const dtend = isoToCompact(addDays(ms.date, 1));
-    const uid = `${ms.date}-${ms.id}@ivf-wheel`;
+    const uid = `${ms.id}@ivf-wheel`;
     const summary = escapeText(ms.label) + (ms.implied ? ' (estimated)' : '');
 
     lines.push('BEGIN:VEVENT');

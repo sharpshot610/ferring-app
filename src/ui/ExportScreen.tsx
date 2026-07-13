@@ -3,17 +3,12 @@ import type { Pregnancy } from '../core/calc';
 import type { Milestone } from '../core/milestones';
 import type { ReminderLead } from '../core/ics';
 import { generateICS } from '../core/ics';
-import { scheduleSummaryText } from '../core/summary';
+import { scheduleSummaryText, formatMilestoneDate } from '../core/summary';
 import { todayLocalISO } from '../core/dates';
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(iso + 'T00:00:00'));
-}
+// Use the shared pure formatter so the export screen and the copy-summary text
+// always display identical date strings (single source of truth).
+const formatDate = formatMilestoneDate;
 
 interface Props {
   pregnancy: Pregnancy;
@@ -65,8 +60,12 @@ export function ExportScreen({ pregnancy, milestones, today, onBack }: Props) {
     a.download = 'ivf-schedule.ics';
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Defer cleanup: Safari processes downloads asynchronously, so revoking the
+    // URL synchronously can abort the download before the browser fetches it.
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
   }
 
   function handlePrint() {
@@ -164,36 +163,22 @@ export function ExportScreen({ pregnancy, milestones, today, onBack }: Props) {
               class="input summary-textarea"
               readOnly
               rows={12}
+              value={fallbackText}
               ref={(el: HTMLTextAreaElement | null) => {
                 if (el) { el.select(); }
               }}
-            >{fallbackText}</textarea>
+            />
+            <button
+              class="btn btn--secondary"
+              style="margin-top: var(--space-sm);"
+              onClick={() => setCopyState('idle')}
+            >
+              Done
+            </button>
           </div>
         )}
       </div>
 
-      {/* Print-only section — hidden on screen, visible only @media print */}
-      <section class="print-schedule" aria-hidden="true">
-        <h1 class="print-schedule__title">IVF Wheel — Schedule</h1>
-        <p class="print-schedule__meta">Generated {today}</p>
-        <table class="print-schedule__table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Milestone</th>
-            </tr>
-          </thead>
-          <tbody>
-            {milestones.map(m => (
-              <tr key={m.id}>
-                <td>{formatDate(m.date)}</td>
-                <td>{m.label}{m.implied ? ' (estimated)' : ''}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p class="print-schedule__disclaimer">Not medical advice — confirm all dates with your clinic.</p>
-      </section>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { Milestone } from '../core/milestones';
 import { TodayHeader } from './TodayHeader';
 import { Timeline } from './Timeline';
 import { ReverseQuery } from './ReverseQuery';
+import { formatMilestoneDate } from '../core/summary';
 
 const PREGNANCY_LABELS: Record<string, string> = {
   lmp: 'Last menstrual period',
@@ -19,14 +20,8 @@ const PREGNANCY_LABELS: Record<string, string> = {
 
 const TRANSFER_ANCHOR_TYPES = ['transfer_day3', 'transfer_day5'];
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(iso + 'T00:00:00'));
-}
+// Use the shared pure formatter (single source of truth, matches copy-summary text).
+const formatDate = formatMilestoneDate;
 
 interface Props {
   pregnancy: Pregnancy;
