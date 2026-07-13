@@ -1019,6 +1019,26 @@ body {
   }
 }
 
+/* ─── Resume banner (fresh-load returning user) ──────────────────────────── */
+.resume-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-highlight);
+  padding: var(--space-md);
+}
+
+.resume-banner__text {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.resume-banner__btn {
+  align-self: flex-start;
+}
+
 /* ─── Wizard card ────────────────────────────────────────────────────────── */
 .wizard-card {
   display: flex;
