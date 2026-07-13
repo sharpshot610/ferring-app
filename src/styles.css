@@ -553,6 +553,7 @@ body {
 }
 
 .btn--primary:hover { background: var(--color-accent-dark); }
+.btn--primary:disabled { background: var(--color-text-muted); cursor: not-allowed; }
 
 .btn--secondary {
   background: var(--color-surface-2);
