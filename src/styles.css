@@ -1552,7 +1552,9 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 199;
+  /* Must paint BELOW the sibling .dp-panel inside the .dp-popup stacking
+     context, or it intercepts every tap on the mobile centered layout. */
+  z-index: 0;
 }
 
 .dp-popup {
@@ -1580,6 +1582,8 @@ body {
 }
 
 .dp-panel {
+  position: relative;
+  z-index: 1; /* above .dp-backdrop within the popup's stacking context */
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius);
