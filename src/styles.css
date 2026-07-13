@@ -446,6 +446,38 @@ body {
   font-weight: 600;
 }
 
+/* Highlighted by calendar day click — chartreuse-tinted background */
+.timeline__item--highlighted {
+  background: color-mix(in srgb, var(--color-highlight) 14%, transparent);
+  border-radius: var(--radius-sm);
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+  margin: 0 calc(-1 * var(--space-sm));
+  transition: background var(--transition);
+}
+
+/* Selected by milestone click — stronger tint + left accent bar */
+.timeline__item--selected {
+  background: color-mix(in srgb, var(--color-highlight) 22%, transparent);
+  border-radius: var(--radius-sm);
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+  margin: 0 calc(-1 * var(--space-sm));
+  border-left: 3px solid var(--color-highlight);
+  transition: background var(--transition);
+}
+
+/* Cursor and focus ring for interactive milestone rows */
+.timeline__item[tabindex] {
+  cursor: pointer;
+}
+
+.timeline__item:focus-visible {
+  outline: 2px solid var(--color-highlight);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .timeline__item-icon {
   font-size: 0.85rem;
   min-width: 20px;
@@ -1426,17 +1458,55 @@ body {
   opacity: 0.45;
 }
 
-/* Today — chartreuse outline */
+/* Today — muted outline + small underline dot to remain distinct from milestone ring */
 .cal-grid__day--today {
-  outline: 2px solid var(--color-highlight);
+  outline: 2px solid color-mix(in srgb, var(--color-highlight) 45%, transparent);
   outline-offset: -2px;
 }
 
-/* Selected — burgundy fill */
+/* Today when also a milestone day — keep the muted outline; milestone ring handled below */
+.cal-grid__day--milestone-today {
+  outline: 2px solid color-mix(in srgb, var(--color-highlight) 45%, transparent);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 2px var(--color-highlight);
+}
+
+/* Selected — burgundy fill (overrides everything) */
 .cal-grid__day--selected {
   background: var(--color-accent) !important;
   color: #fff !important;
   outline: none;
+  box-shadow: none;
+}
+
+/* Today + selected — burgundy fill but keep a subtle muted ring so "today" is still visible */
+.cal-grid__day--today-selected {
+  background: var(--color-accent) !important;
+  color: #fff !important;
+  outline: 2px solid color-mix(in srgb, var(--color-highlight) 45%, transparent);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+/* Milestone-day dormant ring — chartreuse border on days that carry a milestone */
+.cal-grid__day--milestone {
+  box-shadow: inset 0 0 0 2px var(--color-highlight);
+}
+
+/* Linked from milestone hover/click — thick chartreuse ring, visually distinct from selected */
+.cal-grid__day--linked {
+  outline: 3px solid var(--color-highlight);
+  outline-offset: -1px;
+  box-shadow: none;
+}
+
+/* Linked + selected simultaneously — keep burgundy fill, strong chartreuse ring */
+.cal-grid__day--linked-selected {
+  background: var(--color-accent) !important;
+  color: #fff !important;
+  outline: 3px solid var(--color-highlight);
+  outline-offset: -1px;
+  box-shadow: none;
 }
 
 .cal-grid__day:focus-visible {
