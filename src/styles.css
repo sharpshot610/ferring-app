@@ -1,16 +1,61 @@
 /* IVF Wheel — application styles */
 /* Mobile-first, single column, CSS custom properties, dark mode support */
 
+/* ─── Self-hosted fonts ───────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/montserrat-500.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/montserrat-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/montserrat-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Karla';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/karla-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Karla';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/karla-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* ─── Custom properties ──────────────────────────────────────────────────── */
 :root {
-  --color-accent: #6a4c93;
-  --color-accent-light: #9b72cf;
-  --color-accent-dark: #4a3068;
+  /* Rebrand: Burgundy (primary) + Chartreuse (secondary) */
+  --color-accent: #800020;
+  --color-accent-light: #B85C6E;
+  --color-accent-dark: #5a0016;
 
-  --color-bg: #f5f5f7;
+  --color-highlight: #9BBF1F;
+
+  --color-bg: #f9f7f4;
   --color-surface: #ffffff;
-  --color-surface-2: #f0eff4;
-  --color-border: #e0dde8;
+  --color-surface-2: #f2ede8;
+  --color-border: #e4ddd6;
 
   --color-text: #1c1c1e;
   --color-text-secondary: #6e6e73;
@@ -20,15 +65,19 @@
   --color-today: var(--color-accent);
   --color-future: var(--color-text);
 
-  --color-badge-bg: var(--color-accent);
-  --color-badge-text: #fff;
+  --color-badge-bg: var(--color-highlight);
+  --color-badge-text: #1c1c1e;
 
   --color-error-bg: #fff2f2;
   --color-error-border: #ffb3b3;
   --color-error-text: #c0392b;
 
-  --color-tag-bg: #ede8f5;
-  --color-tag-text: var(--color-accent-dark);
+  --color-tag-bg: #f0e8d0;
+  --color-tag-text: #5a0016;
+
+  /* Font stacks */
+  --font-heading: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-body: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
 
   --radius: 12px;
   --radius-sm: 6px;
@@ -45,50 +94,57 @@
 /* Dark mode — system preference */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1c1c1e;
-    --color-surface: #2c2c2e;
-    --color-surface-2: #3a3a3c;
-    --color-border: #3a3a3c;
-    --color-text: #f5f5f7;
-    --color-text-secondary: #a0a0a8;
-    --color-text-muted: #6e6e73;
+    --color-bg: #1a1215;
+    --color-surface: #261b1f;
+    --color-surface-2: #312028;
+    --color-border: #3d2830;
+    --color-text: #f5f0f2;
+    --color-text-secondary: #b09aa0;
+    --color-text-muted: #7a6570;
     --color-error-bg: #3d1515;
     --color-error-border: #7a2020;
     --color-error-text: #ff8080;
-    --color-tag-bg: #3a2d50;
+    --color-tag-bg: #3a2025;
     --color-tag-text: var(--color-accent-light);
+    /* Burgundy text on dark: use lighter variant for readability */
+    --color-accent: #B85C6E;
+    --color-accent-dark: #d07080;
   }
 }
 
 /* Manual theme overrides */
 [data-theme="dark"] {
-  --color-bg: #1c1c1e;
-  --color-surface: #2c2c2e;
-  --color-surface-2: #3a3a3c;
-  --color-border: #3a3a3c;
-  --color-text: #f5f5f7;
-  --color-text-secondary: #a0a0a8;
-  --color-text-muted: #6e6e73;
+  --color-bg: #1a1215;
+  --color-surface: #261b1f;
+  --color-surface-2: #312028;
+  --color-border: #3d2830;
+  --color-text: #f5f0f2;
+  --color-text-secondary: #b09aa0;
+  --color-text-muted: #7a6570;
   --color-error-bg: #3d1515;
   --color-error-border: #7a2020;
   --color-error-text: #ff8080;
-  --color-tag-bg: #3a2d50;
+  --color-tag-bg: #3a2025;
   --color-tag-text: var(--color-accent-light);
+  --color-accent: #B85C6E;
+  --color-accent-dark: #d07080;
 }
 
 [data-theme="light"] {
-  --color-bg: #f5f5f7;
+  --color-bg: #f9f7f4;
   --color-surface: #ffffff;
-  --color-surface-2: #f0eff4;
-  --color-border: #e0dde8;
+  --color-surface-2: #f2ede8;
+  --color-border: #e4ddd6;
   --color-text: #1c1c1e;
   --color-text-secondary: #6e6e73;
   --color-text-muted: #a0a0a8;
   --color-error-bg: #fff2f2;
   --color-error-border: #ffb3b3;
   --color-error-text: #c0392b;
-  --color-tag-bg: #ede8f5;
-  --color-tag-text: var(--color-accent-dark);
+  --color-tag-bg: #f0e8d0;
+  --color-tag-text: #5a0016;
+  --color-accent: #800020;
+  --color-accent-dark: #5a0016;
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────────── */
@@ -97,6 +153,7 @@ html { font-size: 16px; }
 body {
   background: var(--color-bg);
   color: var(--color-text);
+  font-family: var(--font-body);
   line-height: 1.5;
   min-height: 100dvh;
 }
@@ -135,6 +192,7 @@ body {
 .app-header__title {
   font-size: 1.25rem;
   font-weight: 700;
+  font-family: var(--font-heading);
   color: var(--color-accent);
   letter-spacing: -0.01em;
 }
@@ -295,13 +353,15 @@ body {
 }
 
 .badge--countdown {
-  background: var(--color-accent);
-  color: #fff;
+  background: var(--color-highlight);
+  color: #1c1c1e;
+  font-weight: 700;
 }
 
 .badge--today {
-  background: var(--color-accent);
-  color: #fff;
+  background: var(--color-highlight);
+  color: #1c1c1e;
+  font-weight: 700;
 }
 
 .tag {
@@ -320,26 +380,6 @@ body {
   white-space: normal;
 }
 
-/* ─── Calculator card ────────────────────────────────────────────────────── */
-.calculator-card__collapsed-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-}
-
-.calculator-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-md);
-}
-
-.calculator-card__title {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
 
 /* ─── Segmented control ──────────────────────────────────────────────────── */
 .segmented-control {
@@ -559,6 +599,7 @@ body {
 .nav-bar__title {
   font-size: 0.9rem;
   font-weight: 600;
+  font-family: var(--font-heading);
   color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
@@ -679,8 +720,9 @@ body {
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   border: none;
+  font-family: var(--font-heading);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
   min-height: 44px;
@@ -796,6 +838,207 @@ body {
   }
 }
 
+/* ─── Wizard card ────────────────────────────────────────────────────────── */
+.wizard-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.wizard-back-top {
+  align-self: flex-start;
+  padding-left: 0;
+  color: var(--color-accent);
+  margin-bottom: calc(-1 * var(--space-xs));
+}
+
+/* ─── Wizard intro ───────────────────────────────────────────────────────── */
+.wizard-intro__text {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Wizard step heading ────────────────────────────────────────────────── */
+.wizard__step-heading {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: var(--space-xs);
+}
+
+/* ─── Anchor option cards ────────────────────────────────────────────────── */
+.anchor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 380px) {
+  .anchor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.anchor-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition), background var(--transition);
+  min-height: 72px;
+}
+
+.anchor-card:hover,
+.anchor-card:focus-visible {
+  border-color: var(--color-highlight);
+  background: var(--color-surface-2);
+  outline: none;
+}
+
+.anchor-card__label {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.anchor-card__caption {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* ─── Wizard progress bar ────────────────────────────────────────────────── */
+.wizard-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.wizard-progress__back {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.wizard-progress__back:hover { color: var(--color-accent-dark); }
+
+.wizard-progress__steps {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  flex: 1;
+}
+
+.wizard-progress__dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.wizard-progress__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: background var(--transition);
+}
+
+.wizard-progress__dot--done {
+  background: var(--color-highlight);
+}
+
+.wizard-progress__dot--active {
+  background: var(--color-accent);
+  width: 10px;
+  height: 10px;
+}
+
+/* ─── Wizard chosen type display ─────────────────────────────────────────── */
+.wizard-chosen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-highlight);
+  border-radius: var(--radius-sm);
+}
+
+.wizard-chosen__label {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.wizard-chosen__change {
+  color: var(--color-accent);
+  font-size: 0.8rem;
+}
+
+/* ─── Wizard CTA button ──────────────────────────────────────────────────── */
+.wizard__cta {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+/* ─── Date field hint text ───────────────────────────────────────────────── */
+.form-field__hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Wizard confirm summary ─────────────────────────────────────────────── */
+.wizard-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.wizard-summary__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wizard-summary__row:last-child { border-bottom: none; }
+
+.wizard-summary__key {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.wizard-summary__val {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 /* ─── Print styles ───────────────────────────────────────────────────────── */
 .print-schedule {
   display: none;
@@ -817,7 +1060,7 @@ body {
   body:has(.print-schedule) .action-row,
   body:has(.print-schedule) .today-header,
   body:has(.print-schedule) .timeline,
-  body:has(.print-schedule) .calculator-card,
+  body:has(.print-schedule) .wizard-card,
   body:has(.print-schedule) .export-section,
   body:has(.print-schedule) .screen-content,
   body:has(.print-schedule) select,

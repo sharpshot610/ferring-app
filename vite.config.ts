@@ -9,6 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'generateSW',
+      workbox: {
+        // Include font files in the precache so the app works fully offline.
+        globPatterns: ['**/*.{js,css,html,png,webmanifest,woff2}'],
+      },
       manifest: {
         name: 'IVF Wheel',
         short_name: 'IVF Wheel',
@@ -16,7 +20,7 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/ferring-app/',
         scope: '/ferring-app/',
-        theme_color: '#6a4c93',
+        theme_color: '#800020',
         background_color: '#f5f5f7',
         icons: [
           {

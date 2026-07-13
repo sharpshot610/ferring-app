@@ -7,7 +7,7 @@ import { computePregnancy } from '../core/calc';
 import { getMilestones } from '../core/milestones';
 import { todayLocalISO } from '../core/dates';
 import { NavBar } from './NavBar';
-import { CalculatorCard } from './CalculatorCard';
+import { SetupWizard } from './SetupWizard';
 import { ScheduleScreen } from './ScheduleScreen';
 import { ExportScreen } from './ExportScreen';
 import { formatMilestoneDate } from '../core/summary';
@@ -35,7 +35,7 @@ function nextTheme(current: Theme): Theme {
 }
 
 function screenTitle(screen: Screen): string {
-  if (screen === 'setup') return 'Calculator';
+  if (screen === 'setup') return '';
   if (screen === 'schedule') return 'Schedule';
   return 'Export';
 }
@@ -147,7 +147,6 @@ export function App() {
       <header class="app-header">
         <div class="app-header__brand">
           <h1 class="app-header__title">IVF Wheel</h1>
-          <span class="app-header__subtitle">Gestational calculator</span>
         </div>
       </header>
 
@@ -168,7 +167,7 @@ export function App() {
         )}
 
         {screen === 'setup' && (
-          <CalculatorCard
+          <SetupWizard
             anchor={state.anchor}
             settings={state.settings}
             fromSchedule={fromSchedule}
