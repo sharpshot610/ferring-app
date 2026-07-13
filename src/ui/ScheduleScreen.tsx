@@ -22,6 +22,14 @@ const PREGNANCY_LABELS: Record<string, string> = {
   trimester2End: 'End of 2nd trimester',
 };
 
+// Tooltip text for niche terms shown in the derived-dates section
+const PREGNANCY_TIPS: Partial<Record<string, string>> = {
+  lmp: 'Last menstrual period — the reference point clinics use to date pregnancy',
+  edd: 'Only ~5% of babies arrive exactly on this date',
+  betaHcg: 'A blood test measuring pregnancy hormone levels — your first pregnancy confirmation',
+  lastProgesterone: 'Typically stopped around 10 weeks when the placenta takes over',
+};
+
 const TRANSFER_ANCHOR_TYPES = ['transfer_day3', 'transfer_day5'];
 
 // Use the shared pure formatter (single source of truth, matches copy-summary text).
@@ -33,6 +41,7 @@ interface Props {
   today: string;
   onEditInputs: () => void;
   onStartOver: () => void;
+  onCalendar: () => void;
   onExport: () => void;
 }
 
@@ -101,6 +110,7 @@ export function ScheduleScreen({
   today,
   onEditInputs,
   onStartOver,
+  onCalendar,
   onExport,
 }: Props) {
   const [reverseOpen, setReverseOpen] = useState(false);
@@ -179,10 +189,14 @@ export function ScheduleScreen({
           {pregnancyKeys.map(key => {
             const val = (pregnancy as unknown as Record<string, string>)[key];
             if (!val) return null;
+            const tip = PREGNANCY_TIPS[key];
             return (
               <div class="derived-dates__row" key={key}>
                 <dt class="derived-dates__term">
                   {PREGNANCY_LABELS[key]}
+                  {tip && (
+                    <span class="tip" data-tip={tip} tabIndex={0}>ⓘ</span>
+                  )}
                   {key === 'betaHcg' && isBetaHcgEstimated && (
                     <span class="tag tag--note">(estimated — assumes day-5 transfer)</span>
                   )}
@@ -329,7 +343,7 @@ export function ScheduleScreen({
       </div>
 
       {/* Action row */}
-      <div class="action-row">
+      <div class="action-row action-row--wrap">
         {!confirmStartOver ? (
           <button class="btn btn--destructive btn--small" onClick={handleStartOverClick}>
             Start over
@@ -345,9 +359,14 @@ export function ScheduleScreen({
             </button>
           </div>
         )}
-        <button class="btn btn--primary" onClick={onExport}>
-          Export schedule →
-        </button>
+        <div class="action-row__right">
+          <button class="btn btn--secondary" onClick={onCalendar}>
+            Calendar view
+          </button>
+          <button class="btn btn--primary" onClick={onExport}>
+            Export schedule →
+          </button>
+        </div>
       </div>
     </div>
   );

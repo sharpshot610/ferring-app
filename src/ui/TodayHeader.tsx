@@ -46,7 +46,14 @@ export function TodayHeader({ pregnancy, today }: Props) {
         <span class="today-header__ga-label">gestational age</span>
       </div>
       <div class="today-header__ca">
-        {ca.weeks}w {ca.days}d conceptional age
+        {ca.weeks}w {ca.days}d{' '}
+        <span
+          class="tip"
+          data-tip="Age counted from fertilisation — about 2 weeks less than gestational age"
+          tabIndex={0}
+        >
+          conceptional age
+        </span>
       </div>
       <div class="today-header__size">{sizeText}</div>
 
