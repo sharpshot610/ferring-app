@@ -700,12 +700,13 @@ body {
 .btn--primary:disabled { background: var(--color-text-muted); cursor: not-allowed; }
 
 .btn--secondary {
-  background: var(--color-surface-2);
+  background: var(--color-surface);
   color: var(--color-accent);
-  border: 1.5px solid var(--color-border);
+  border: 1.5px solid var(--color-accent);
+  font-weight: 600;
 }
 
-.btn--secondary:hover { background: var(--color-border); }
+.btn--secondary:hover { background: var(--color-surface-2); }
 
 .btn--ghost {
   background: transparent;
@@ -827,6 +828,23 @@ body {
   /* Show and style the print section */
   .print-schedule {
     display: block !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-schedule__table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Kill the screen layout's viewport-height flex stretch: with min-height
+     100dvh and .app-main { flex: 1 }, Safari reserves a full viewport of empty
+     space above the print section, pushing the schedule across the page break.
+     Block layout with no min-height starts the schedule at the top of page 1. */
+  body:has(.print-schedule) .app,
+  body:has(.print-schedule) .app-main {
+    display: block !important;
+    min-height: 0 !important;
   }
 
   .print-schedule__title {
