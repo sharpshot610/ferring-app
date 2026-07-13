@@ -88,7 +88,8 @@ export function monthOf(date: ISODate): { year: number; month: number } {
 export function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
   // Convert to 0-indexed month count from year 0
   const totalMonths = (year * 12 + (month - 1)) + delta;
+  // Use floored division so negative totalMonths give a correct year (JS % is remainder, not modulo).
   const newYear = Math.floor(totalMonths / 12);
-  const newMonth = (totalMonths % 12) + 1;
+  const newMonth = ((totalMonths % 12) + 12) % 12 + 1;
   return { year: newYear, month: newMonth };
 }

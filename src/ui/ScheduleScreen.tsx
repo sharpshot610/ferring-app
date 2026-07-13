@@ -195,7 +195,7 @@ export function ScheduleScreen({
                 <dt class="derived-dates__term">
                   {PREGNANCY_LABELS[key]}
                   {tip && (
-                    <span class="tip" data-tip={tip}>ⓘ</span>
+                    <span class="tip" data-tip={tip} tabIndex={0}>ⓘ</span>
                   )}
                   {key === 'betaHcg' && isBetaHcgEstimated && (
                     <span class="tag tag--note">(estimated — assumes day-5 transfer)</span>

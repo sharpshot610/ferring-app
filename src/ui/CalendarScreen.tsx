@@ -2,7 +2,6 @@ import { useState } from 'preact/hooks';
 import type { Milestone } from '../core/milestones';
 import { nextMilestone } from '../core/milestones';
 import { monthGridFor, monthOf, addMonths } from '../core/monthGrid';
-import { todayLocalISO } from '../core/dates';
 import type { ISODate } from '../core/dates';
 import { CalendarGrid } from './CalendarGrid';
 import { formatMilestoneDate } from '../core/summary';
@@ -36,9 +35,7 @@ export function CalendarScreen({ milestones, today, onBack, onExport }: Props) {
   function initialYM() {
     const next = nextMilestone(milestones);
     if (next) return monthOf(next.date as ISODate);
-    try { return monthOf(todayLocalISO()); } catch {
-      const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() + 1 };
-    }
+    return monthOf(today as ISODate);
   }
 
   const init = initialYM();
@@ -88,10 +85,8 @@ export function CalendarScreen({ milestones, today, onBack, onExport }: Props) {
   const gridDates = new Set(grid.weeks.flatMap(w => w.map(c => c.date)));
   const visibleMilestones = milestones.filter(m => gridDates.has(m.date));
 
-  let todayStr: ISODate;
-  try { todayStr = todayLocalISO(); } catch {
-    todayStr = new Date().toISOString().slice(0, 10) as ISODate;
-  }
+  // Use the app-managed today prop — do not call todayLocalISO() at render.
+  const todayStr = today as ISODate;
 
   return (
     <div class="screen-content">
@@ -136,7 +131,7 @@ export function CalendarScreen({ milestones, today, onBack, onExport }: Props) {
                 <span class="cal-legend__text">
                   {formatMilestoneDate(m.date)} — {m.label}
                   {m.implied && (
-                    <span class="tip" data-tip="Estimated from the date you entered, not one you confirmed"> (implied)</span>
+                    <span class="tip" data-tip="Estimated from the date you entered, not one you confirmed" tabIndex={0}> (implied)</span>
                   )}
                 </span>
               </li>

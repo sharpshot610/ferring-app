@@ -1327,7 +1327,7 @@ body {
   border-radius: var(--radius-sm);
   white-space: normal;
   width: max-content;
-  max-width: 240px;
+  max-width: min(240px, calc(100vw - 24px));
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease;

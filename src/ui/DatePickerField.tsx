@@ -17,6 +17,8 @@ export interface DatePickerFieldProps {
   onChange: (val: string) => void;
   /** Text shown when no date is chosen. */
   placeholder?: string;
+  /** Today's date (ISODate). Defaults to todayLocalISO(). Used to compute nav bounds. */
+  today?: string;
 }
 
 export function DatePickerField({
@@ -24,18 +26,22 @@ export function DatePickerField({
   hasError,
   onChange,
   placeholder = '📅 Tap to choose a date',
+  today: todayProp,
 }: DatePickerFieldProps) {
   const [open, setOpen] = useState(false);
+
+  // Resolved today: use prop when provided, fall back to todayLocalISO().
+  const todayStr: ISODate = (todayProp as ISODate | undefined) ?? todayLocalISO();
+
+  // Nav bounds: today ± 10 years
+  const todayYM = monthOf(todayStr);
+  const minNavYM = { year: todayYM.year - 10, month: todayYM.month };
+  const maxNavYM = { year: todayYM.year + 10, month: todayYM.month };
 
   // Determine initial month: selected date's month, or today's month
   function initialMonth(): { year: number; month: number } {
     if (value) return monthOf(value as ISODate);
-    try {
-      return monthOf(todayLocalISO());
-    } catch {
-      const n = new Date();
-      return { year: n.getFullYear(), month: n.getMonth() + 1 };
-    }
+    return todayYM;
   }
 
   const [navYear, setNavYear] = useState(initialMonth().year);
@@ -54,13 +60,18 @@ export function DatePickerField({
     triggerRef.current?.focus();
   }
 
+  const atMin = navYear * 12 + navMonth <= minNavYM.year * 12 + minNavYM.month;
+  const atMax = navYear * 12 + navMonth >= maxNavYM.year * 12 + maxNavYM.month;
+
   function prevMonth() {
+    if (atMin) return;
     const { year, month } = addMonths(navYear, navMonth, -1);
     setNavYear(year);
     setNavMonth(month);
   }
 
   function nextMonth() {
+    if (atMax) return;
     const { year, month } = addMonths(navYear, navMonth, 1);
     setNavYear(year);
     setNavMonth(month);
@@ -109,12 +120,14 @@ export function DatePickerField({
     firstBtn?.focus();
   }, [open]);
 
-  let todayStr: ISODate;
-  try {
-    todayStr = todayLocalISO();
-  } catch {
-    todayStr = new Date().toISOString().slice(0, 10) as ISODate;
-  }
+  // Body scroll-lock while popup is open (only meaningful on ≤480px modal layout,
+  // but harmless on wider screens and safe to apply unconditionally).
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
   const grid = monthGridFor(navYear, navMonth);
 
@@ -154,7 +167,9 @@ export function DatePickerField({
                 type="button"
                 class="dp-nav-btn"
                 onClick={prevMonth}
+                disabled={atMin}
                 aria-label="Previous month"
+                aria-disabled={atMin}
               >
                 ‹
               </button>
@@ -163,7 +178,9 @@ export function DatePickerField({
                 type="button"
                 class="dp-nav-btn"
                 onClick={nextMonth}
+                disabled={atMax}
                 aria-label="Next month"
+                aria-disabled={atMax}
               >
                 ›
               </button>

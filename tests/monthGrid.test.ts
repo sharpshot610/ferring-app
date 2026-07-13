@@ -182,6 +182,15 @@ describe('addMonths', () => {
   it('addMonths large positive delta crosses multiple years', () => {
     expect(addMonths(2024, 11, 26)).toEqual({ year: 2027, month: 1 });
   });
+
+  it('addMonths(0, 1, -1) → {year: -1, month: 12} (floored modulo, not JS remainder)', () => {
+    expect(addMonths(0, 1, -1)).toEqual({ year: -1, month: 12 });
+  });
+
+  it('addMonths(1, 1, -13) → {year: -1, month: 12} (totalMonths=-1, floored)', () => {
+    // totalMonths = 1*12 + (1-1) - 13 = -1 → floor(-1/12)=-1, month=12
+    expect(addMonths(1, 1, -13)).toEqual({ year: -1, month: 12 });
+  });
 });
 
 describe('monthGridFor — validation', () => {

@@ -50,6 +50,7 @@ export function TodayHeader({ pregnancy, today }: Props) {
         <span
           class="tip"
           data-tip="Age counted from fertilisation — about 2 weeks less than gestational age"
+          tabIndex={0}
         >
           conceptional age
         </span>
