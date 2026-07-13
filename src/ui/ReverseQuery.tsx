@@ -38,8 +38,7 @@ export function ReverseQuery({ pregnancy }: Props) {
   }
 
   function lookupDate() {
-    let valid = false;
-    try { valid = isValidISODate(dateInput); } catch { valid = dateInput.length === 10; }
+    const valid = isValidISODate(dateInput);
     if (!valid) {
       setGaResult('Enter a valid date.');
       return;

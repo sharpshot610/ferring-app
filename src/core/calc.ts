@@ -109,7 +109,16 @@ function lmpFromAnchor(anchor: Anchor): ISODate {
       if (!anchor.ga) {
         throw new Error("Anchor type 'ga_on_date' requires a `ga` value.");
       }
-      return addDays(anchor.date, -(7 * anchor.ga.weeks + anchor.ga.days));
+      const { weeks, days } = anchor.ga;
+      if (
+        !Number.isInteger(weeks) || weeks < 0 ||
+        !Number.isInteger(days) || days < 0
+      ) {
+        throw new Error(
+          `ga_on_date: weeks and days must be non-negative integers, got weeks=${weeks} days=${days}`,
+        );
+      }
+      return addDays(anchor.date, -(7 * weeks + days));
     }
   }
 }

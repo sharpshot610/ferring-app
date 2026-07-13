@@ -41,6 +41,24 @@ describe('ga_on_date normalization', () => {
   it('throws a clear error when ga is missing', () => {
     expect(() => computePregnancy({ type: 'ga_on_date', date: '2024-06-01' })).toThrow(/ga/i);
   });
+
+  it('throws for non-finite weeks (Infinity)', () => {
+    expect(() =>
+      computePregnancy({ type: 'ga_on_date', date: '2024-06-01', ga: { weeks: Infinity, days: 0 } }),
+    ).toThrow();
+  });
+
+  it('throws for negative weeks', () => {
+    expect(() =>
+      computePregnancy({ type: 'ga_on_date', date: '2024-06-01', ga: { weeks: -1, days: 0 } }),
+    ).toThrow();
+  });
+
+  it('throws for fractional days', () => {
+    expect(() =>
+      computePregnancy({ type: 'ga_on_date', date: '2024-06-01', ga: { weeks: 10, days: 2.5 } }),
+    ).toThrow();
+  });
 });
 
 describe('gestationalAgeOn', () => {

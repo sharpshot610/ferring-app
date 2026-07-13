@@ -31,7 +31,21 @@ function isValidAnchorType(t: unknown): boolean {
   );
 }
 
-function isValidAnchor(a: unknown): a is Anchor {
+/** Safe GA field: integer, non-negative, weeks ≤ 45, days 0–6. */
+function isValidGAWeeks(v: unknown): v is number {
+  return Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 45;
+}
+
+function isValidGADays(v: unknown): v is number {
+  return Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 6;
+}
+
+/** Safe betaHcg offset: integer, 1–30. */
+function isValidBetaOffset(v: unknown): v is number {
+  return Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 30;
+}
+
+export function isValidAnchor(a: unknown): a is Anchor {
   if (!a || typeof a !== 'object') return false;
   const obj = a as Record<string, unknown>;
   if (!isValidAnchorType(obj.type)) return false;
@@ -39,16 +53,16 @@ function isValidAnchor(a: unknown): a is Anchor {
   if (obj.type === 'ga_on_date') {
     if (!obj.ga || typeof obj.ga !== 'object') return false;
     const ga = obj.ga as Record<string, unknown>;
-    if (typeof ga.weeks !== 'number' || typeof ga.days !== 'number') return false;
+    if (!isValidGAWeeks(ga.weeks) || !isValidGADays(ga.days)) return false;
   }
   return true;
 }
 
-function isValidSettings(s: unknown): s is Settings {
+export function isValidSettings(s: unknown): s is Settings {
   if (!s || typeof s !== 'object') return false;
   const obj = s as Record<string, unknown>;
-  if (typeof obj.betaHcgAfterDay5 !== 'number') return false;
-  if (typeof obj.betaHcgAfterDay3 !== 'number') return false;
+  if (!isValidBetaOffset(obj.betaHcgAfterDay5)) return false;
+  if (!isValidBetaOffset(obj.betaHcgAfterDay3)) return false;
   if (
     obj.transferKind !== 'fresh' &&
     obj.transferKind !== 'frozen' &&
@@ -56,7 +70,7 @@ function isValidSettings(s: unknown): s is Settings {
   ) return false;
   if (!obj.lastProgesteroneGA || typeof obj.lastProgesteroneGA !== 'object') return false;
   const ga = obj.lastProgesteroneGA as Record<string, unknown>;
-  if (typeof ga.weeks !== 'number' || typeof ga.days !== 'number') return false;
+  if (!isValidGAWeeks(ga.weeks) || !isValidGADays(ga.days)) return false;
   return true;
 }
 

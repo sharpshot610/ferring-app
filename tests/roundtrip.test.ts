@@ -8,6 +8,14 @@ import {
 import { addDays, fromEpochDay, toEpochDay } from '../src/core/dates';
 import { allFixtures } from './fixtures';
 
+// NOTE: The full round-trip identity (including betaHcg) only holds when the
+// settings satisfy betaHcgAfterDay3 === betaHcgAfterDay5 + 2.  The default
+// settings (day3=12, day5=10) satisfy this.  When custom settings break that
+// relation, betaHcg will differ between anchor types that compute it via the
+// transfer-date directly versus anchor types that derive it from the LMP (which
+// estimates a day-5 transfer).  All other fields (lmp, edd, retrieval, etc.)
+// always round-trip exactly, regardless of betaHcg settings.
+
 // Strip anchorType so we can compare the canonical derived fields regardless of
 // which anchor produced them.
 function withoutAnchorType(p: Pregnancy): Omit<Pregnancy, 'anchorType'> {
@@ -47,6 +55,36 @@ describe('re-anchoring round-trips (all fixtures, all 6 ways)', () => {
       assertRoundTrips(base, addDays(base.lmp, 123));
     });
   }
+});
+
+describe('betaHcg round-trip caveats with custom settings', () => {
+  it('non-betaHcg fields still round-trip when betaHcgAfterDay3 !== betaHcgAfterDay5 + 2', () => {
+    // Break the default relation (12 === 10 + 2) by setting day3=14, day5=10.
+    const customSettings = { betaHcgAfterDay3: 14, betaHcgAfterDay5: 10 };
+    const retrieval = '2024-05-01';
+    const base = computePregnancy({ type: 'retrieval', date: retrieval }, customSettings);
+
+    // Re-anchor via non-transfer types.  betaHcg will NOT match because they
+    // estimate via day-5 (transferDay5 + betaHcgAfterDay5), whereas the
+    // transfer_day3 anchor uses day3 + betaHcgAfterDay3.
+    const reanchors: Anchor[] = [
+      { type: 'lmp', date: base.lmp },
+      { type: 'edd', date: base.edd },
+      { type: 'transfer_day5', date: base.transferDay5 },
+    ];
+
+    const NON_BETA_FIELDS = [
+      'lmp', 'edd', 'retrieval', 'transferDay3', 'transferDay5',
+      'lastProgesterone', 'trimester1End', 'trimester2End',
+    ] as const;
+
+    for (const anchor of reanchors) {
+      const p = computePregnancy(anchor, customSettings);
+      for (const field of NON_BETA_FIELDS) {
+        expect(p[field], `${anchor.type}: field ${field}`).toBe(base[field]);
+      }
+    }
+  });
 });
 
 // Deterministic (no Math.random) LCG so the sweep is reproducible.

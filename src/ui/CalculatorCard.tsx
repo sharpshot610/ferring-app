@@ -66,8 +66,7 @@ export function CalculatorCard({
     setAnchorType(type);
     setDateError('');
     // rebuild anchor if we already have a valid date
-    let dateIsValid = false;
-    try { dateIsValid = isValidISODate(dateValue); } catch { dateIsValid = dateValue.length === 10; }
+    const dateIsValid = isValidISODate(dateValue);
     if (dateValue && dateIsValid) {
       const newAnchor: Anchor = {
         type,
@@ -82,8 +81,7 @@ export function CalculatorCard({
     setDateValue(val);
     setDateError('');
     if (!val) return;
-    let valid = false;
-    try { valid = isValidISODate(val); } catch { valid = val.length === 10; }
+    const valid = isValidISODate(val);
     if (!valid) {
       setDateError('Please enter a valid date.');
       return;
