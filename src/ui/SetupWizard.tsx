@@ -1,6 +1,8 @@
 import { useState } from 'preact/hooks';
 import type { AnchorType, Anchor, Settings } from '../core/calc';
 import { isValidISODate } from '../core/dates';
+import { formatMilestoneDate } from '../core/summary';
+import { DatePickerField } from './DatePickerField';
 
 interface Props {
   anchor: Anchor | null;
@@ -196,15 +198,13 @@ export function SetupWizard({
           </button>
         </div>
 
-        {/* Date input — starts empty for new schedules */}
+        {/* Date input — custom wrapper to avoid Safari ghost-date confusion */}
         <div class="form-field">
           <label class="form-field__label">Date</label>
-          <input
-            class={['input', dateError ? 'input--error' : ''].filter(Boolean).join(' ')}
-            type="date"
+          <DatePickerField
             value={dateValue}
-            onInput={e => handleDateChange((e.target as HTMLInputElement).value)}
-            onChange={e => handleDateChange((e.target as HTMLInputElement).value)}
+            hasError={!!dateError}
+            onChange={handleDateChange}
           />
           {dateError && <p class="form-field__error">{dateError}</p>}
           {!dateValue && !dateError && (
